@@ -1,0 +1,146 @@
+import { CourseDAO } from '../daos/CourseDAO.js'
+import { CourseModuleDAO } from '../daos/CourseModuleDAO.js'
+import { CourseEnrollmentDAO } from '../daos/CourseEnrollmentDAO.js'
+import { LaboratoryDAO } from '../daos/LaboratoryDAO.js'
+import { LaboratoryQuestionDAO } from '../daos/LaboratoryQuestionDAO.js'
+import { LaboratoryQuestionOptionDAO } from '../daos/LaboratoryQuestionOptionDAO.js'
+import { QuestionActivityDAO } from '../daos/QuestionActivityDAO.js'
+import { UserActivityProgressDAO } from '../daos/UserActivityProgressDAO.js'
+import { UserLaboratoryProgressDAO } from '../daos/UserLaboratoryProgressDAO.js'
+import { HTTPError } from '../utils/errors.js'
+import type { UserRole, CourseEnrollment } from '../types.js'
+
+export class CourseService {
+  static async listCourses(role?: UserRole) {
+    return CourseDAO.findAll(role !== 'admin')
+  }
+
+  static async getCourse(slug: string, role?: UserRole) {
+    const course = await CourseDAO.findBySlug(slug)
+    if (!course || (!course.isPublished && role !== 'admin'))
+      throw new HTTPError(404, 'Curso no encontrado.')
+    return course
+  }
+
+  static async enrollUser(userId: string, courseSlug: string): Promise<CourseEnrollment> {
+    const course = await CourseDAO.findBySlug(courseSlug)
+    if (!course || !course.isPublished) throw new HTTPError(404, 'Curso no encontrado.')
+    if (await CourseEnrollmentDAO.find(userId, course.id))
+      throw new HTTPError(409, 'Ya estás inscrito en este curso.')
+    return CourseEnrollmentDAO.create(userId, course.id)
+  }
+
+  static async getModules(courseSlug: string, role?: UserRole) {
+    const course = await CourseDAO.findBySlug(courseSlug)
+    if (!course || (!course.isPublished && role !== 'admin'))
+      throw new HTTPError(404, 'Curso no encontrado.')
+    return CourseModuleDAO.findByCourseId(course.id)
+  }
+
+  static async getLaboratories(courseSlug: string, moduleSlug: string, role?: UserRole) {
+    const course = await CourseDAO.findBySlug(courseSlug)
+    if (!course || (!course.isPublished && role !== 'admin'))
+      throw new HTTPError(404, 'Curso no encontrado.')
+    const module = await CourseModuleDAO.findBySlug(course.id, moduleSlug)
+    if (!module) throw new HTTPError(404, 'Módulo no encontrado.')
+    return LaboratoryDAO.findByModuleId(module.id, role !== 'admin')
+  }
+
+  static async getLaboratory(
+    courseSlug: string,
+    moduleSlug: string,
+    labSlug: string,
+    userId: string,
+    role: UserRole,
+  ) {
+    const course = await CourseDAO.findBySlug(courseSlug)
+    if (!course || (!course.isPublished && role !== 'admin'))
+      throw new HTTPError(404, 'Curso no encontrado.')
+
+    // Enrollment gate (admin bypasses)
+    if (role !== 'admin') {
+      if (!(await CourseEnrollmentDAO.find(userId, course.id)))
+        throw new HTTPError(403, 'Debes inscribirte al curso para acceder a este laboratorio.')
+    }
+
+    const module = await CourseModuleDAO.findBySlug(course.id, moduleSlug)
+    if (!module) throw new HTTPError(404, 'Módulo no encontrado.')
+
+    const lab = await LaboratoryDAO.findBySlug(module.id, labSlug)
+    if (!lab || (!lab.isPublished && role !== 'admin'))
+      throw new HTTPError(404, 'Laboratorio no encontrado.')
+
+    const questions = await LaboratoryQuestionDAO.findByLaboratoryId(lab.id)
+
+    const questionsWithDetails = await Promise.all(
+      questions.map(async (q) => {
+        if (q.questionType === 'multiple_choice') {
+          const options = await LaboratoryQuestionOptionDAO.findByQuestionId(q.id)
+          return {
+            id: q.id,
+            questionOrder: q.questionOrder,
+            questionType: q.questionType,
+            questionText: q.questionText,
+            explanation: q.explanation,
+            options: options.map((o) => ({
+              id: o.id,
+              optionOrder: o.optionOrder,
+              optionText: o.optionText,
+            })),
+            activity: null,
+          }
+        }
+
+        // activity_response
+        const activity = await QuestionActivityDAO.findByQuestionId(q.id)
+        const progress = activity
+          ? await UserActivityProgressDAO.find(userId, activity.id)
+          : null
+        return {
+          id: q.id,
+          questionOrder: q.questionOrder,
+          questionType: q.questionType,
+          questionText: q.questionText,
+          explanation: q.explanation,
+          options: [],
+          activity: activity
+            ? {
+                id: activity.id,
+                title: activity.title,
+                instructionsMarkdown: activity.instructionsMarkdown,
+                isCompleted: progress?.status === 'completed',
+                // Only reveal the response after the user completed the activity
+                generatedResponse:
+                  progress?.status === 'completed' ? progress.generatedResponse : null,
+              }
+            : null,
+        }
+      }),
+    )
+
+    const progress = await UserLaboratoryProgressDAO.find(userId, lab.id)
+
+    return {
+      lab: {
+        id: lab.id,
+        slug: lab.slug,
+        title: lab.title,
+        contentMarkdown: lab.contentMarkdown,
+        estimatedMinutes: lab.estimatedMinutes,
+        points: lab.points,
+        quizQuestionsRequired: lab.quizQuestionsRequired,
+        ...(role === 'admin' ? { isPublished: lab.isPublished } : {}),
+      },
+      questions: questionsWithDetails,
+      progress: progress
+        ? {
+            status: progress.status,
+            attemptsCount: progress.attemptsCount,
+            bestScorePercent: progress.bestScorePercent,
+            lastScorePercent: progress.lastScorePercent,
+            completedAt: progress.completedAt,
+          }
+        : null,
+    }
+  }
+}
