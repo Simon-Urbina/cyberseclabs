@@ -1,0 +1,59 @@
+/* ──────────────────────────────────────────────────────────────────────
+   EFFECTS — primitives reused across surfaces (orbs, glass, blink, links).
+   ────────────────────────────────────────────────────────────────────── */
+
+.cursor-blink::after {
+  content: '▋';
+  animation: blink 1s step-end infinite;
+  color: #2596be;
+  margin-left: 2px;
+  font-size: 0.8em;
+}
+
+.scanline-sweep {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(180deg, transparent, rgba(37, 150, 190, 0.07), rgba(37, 150, 190, 0.04), transparent);
+  animation: scanlineSweep 8s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: glowPulse 5s ease-in-out infinite;
+}
+
+.glass-card {
+  background: rgba(6, 13, 31, 0.6);
+  border: 1px solid rgba(26, 63, 150, 0.15);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-card-violet {
+  background: rgba(6, 13, 31, 0.75);
+  border: 1px solid rgba(26, 63, 150, 0.18);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.nav-link {
+  position: relative;
+  padding-bottom: 2px;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: #1A3F96;
+  transition: width 0.25s ease;
+}
+.nav-link:hover::after { width: 100%; }

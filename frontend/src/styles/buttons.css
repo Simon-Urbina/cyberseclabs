@@ -1,0 +1,68 @@
+/* ──────────────────────────────────────────────────────────────────────
+   BUTTONS — shared component styles. Each variant carries its own intent.
+   ────────────────────────────────────────────────────────────────────── */
+
+.btn-neon {
+  background: linear-gradient(110deg, #1A3F96 0%, #2451C8 45%, #1A3F96 55%, #0F2A6B 100%);
+  background-size: 200% auto;
+  color: #fff;
+  font-weight: 600;
+  transition: background-position 0.4s ease, transform 0.15s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 0 rgba(26, 63, 150, 0);
+}
+.btn-neon:hover {
+  background-position: right center;
+  box-shadow: 0 0 24px rgba(26, 63, 150, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.btn-neon:active { transform: scale(0.97); }
+
+.btn-gold {
+  background: linear-gradient(110deg, #F5C500 0%, #ffee99 45%, #F5C500 55%, #C5A200 100%);
+  background-size: 200% auto;
+  color: #1b1009;
+  font-weight: 700;
+  transition: background-position 0.4s ease, transform 0.15s ease, box-shadow 0.3s ease;
+}
+.btn-gold:hover {
+  background-position: right center;
+  box-shadow: 0 0 24px rgba(245, 197, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.btn-gold:active { transform: scale(0.97); }
+
+.btn-shimmer {
+  background: linear-gradient(110deg, #2596be 0%, #3DAED0 45%, #2596be 55%, #1E7DA0 100%);
+  background-size: 200% auto;
+  color: #051828;
+  font-weight: 700;
+  transition: background-position 0.4s ease, transform 0.15s ease, box-shadow 0.3s ease;
+}
+.btn-shimmer:hover {
+  background-position: right center;
+  box-shadow: 0 0 28px rgba(37, 150, 190, 0.45), 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+.btn-shimmer:active { transform: scale(0.97); }
+
+.btn-mahogany {
+  background: linear-gradient(110deg, #0F2A6B 0%, #1A3F96 45%, #0F2A6B 55%, #091E52 100%);
+  background-size: 200% auto;
+  color: #EEF3FC;
+  font-weight: 600;
+  transition: background-position 0.4s ease, transform 0.15s ease, box-shadow 0.3s ease;
+}
+.btn-mahogany:hover {
+  background-position: right center;
+  box-shadow: 0 0 20px rgba(26, 63, 150, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.btn-mahogany:active { transform: scale(0.97); }
+
+.btn-ghost-light {
+  background: transparent;
+  border: 1px solid rgba(26, 63, 150, 0.4);
+  color: #1A3F96;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.btn-ghost-light:hover {
+  background: rgba(26, 63, 150, 0.08);
+  border-color: #1A3F96;
+}

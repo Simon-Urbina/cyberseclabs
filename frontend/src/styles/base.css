@@ -1,0 +1,87 @@
+/* ──────────────────────────────────────────────────────────────────────
+   BASE — fonts, theme tokens, global resets.
+   Loaded once. Anything truly cross-cutting lives here.
+   ────────────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans:    'DM Sans', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+  --font-display: 'Syne', sans-serif;
+
+  /* ── USTA Blue — principal */
+  --color-rosewood-50:  #EEF3FC;
+  --color-rosewood-100: #D6E5FF;
+  --color-rosewood-200: #A8C5FF;
+  --color-rosewood-300: #7BA5F5;
+  --color-rosewood-400: #2451C8;
+  --color-rosewood-500: #1A3F96;
+  --color-rosewood-600: #112C82;
+  --color-rosewood-700: #0F2A6B;
+  --color-rosewood-800: #091E52;
+  --color-rosewood-900: #0A1545;
+  --color-rosewood-950: #060D1F;
+
+  /* ── Navy — superficies */
+  --color-violet-50:  #EEF3FC;
+  --color-violet-100: #D6E5FF;
+  --color-violet-200: #A8C5FF;
+  --color-violet-300: #7B9FE8;
+  --color-violet-400: #5B80D8;
+  --color-violet-500: #4A70CC;
+  --color-violet-600: #3A5AB8;
+  --color-violet-700: #2451C8;
+  --color-violet-800: #162C7A;
+  --color-violet-900: #0D1A4A;
+  --color-violet-950: #060D1F;
+
+  /* ── USTA Gold — acento especial */
+  --color-gold-50:  #fffbe5;
+  --color-gold-100: #fff6cc;
+  --color-gold-200: #ffee99;
+  --color-gold-300: #ffe666;
+  --color-gold-400: #ffdd33;
+  --color-gold-500: #F5C500;
+  --color-gold-600: #C5A200;
+  --color-gold-700: #998000;
+  --color-gold-800: #665500;
+  --color-gold-900: #332b00;
+  --color-gold-950: #241e00;
+
+  /* ── Aqua — acento secundario */
+  --color-teal-50:  #E8F6FB;
+  --color-teal-100: #C8EBF5;
+  --color-teal-200: #96D8EC;
+  --color-teal-300: #5FC5E3;
+  --color-teal-400: #3DAED0;
+  --color-teal-500: #2596be;
+  --color-teal-600: #1E7DA0;
+  --color-teal-700: #165E80;
+  --color-teal-800: #0D3F5E;
+  --color-teal-900: #08253A;
+  --color-teal-950: #051828;
+
+  /* ── Celadon — success */
+  --color-celadon-50:  #eef7f1;
+  --color-celadon-300: #97cea9;
+  --color-celadon-500: #52ad70;
+  --color-celadon-700: #316843;
+}
+
+/* Resets */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Selection */
+::selection {
+  background: rgba(26, 63, 150, 0.35);
+  color: #fff;
+}

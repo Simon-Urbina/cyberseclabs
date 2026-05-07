@@ -1,0 +1,371 @@
+import { Link } from 'react-router-dom'
+import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
+import Header from '../components/Header'
+import Ranking from '../components/Ranking'
+import Footer from '../components/Footer'
+
+const FEATURES = [
+  {
+    title: 'Aprende practicando',
+    body: 'Laboratorios interactivos con escenarios reales. Sin teoría plana, sin diapositivas: solo terminales y problemas para resolver.',
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="4 17 10 11 4 5"/>
+        <line x1="12" y1="19" x2="20" y2="19"/>
+      </svg>
+    ),
+    accent: '#1A3F96',
+  },
+  {
+    title: 'Compite en el ranking',
+    body: 'Cada lab completado suma puntos. Escala posiciones, demuestra tu nivel y mide tu progreso contra otros operadores.',
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+        <path d="M4 22h16"/>
+        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+      </svg>
+    ),
+    accent: '#F5C500',
+  },
+  {
+    title: 'Cero relleno',
+    body: 'Aprendizaje hands-on desde el primer minuto. Cada actividad existe para enseñarte algo concreto que puedas usar el día siguiente.',
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+    ),
+    accent: '#2596be',
+  },
+]
+
+const STATS = [
+  { value: '3', label: 'Cursos' },
+  { value: '12+', label: 'Laboratorios' },
+  { value: '1K+', label: 'Puntos disponibles' },
+]
+
+export default function LandingPage() {
+  const { theme } = useTheme()
+  const { token } = useAuth()
+  const isDark = theme === 'dark'
+
+  return (
+    <div style={{ background: isDark ? '#060D1F' : '#EEF3FC' }}>
+      <Header />
+
+      {/* ─── HERO ─── */}
+      <section
+        className="relative overflow-hidden"
+        style={{
+          background: isDark
+            ? 'linear-gradient(180deg, #0D1630 0%, #060D1F 80%)'
+            : 'linear-gradient(180deg, #E8EEFA 0%, #EEF3FC 80%)',
+        }}
+      >
+        {/* Neon grid */}
+        {isDark && (
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(26, 63, 150, 0.07) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(26, 63, 150, 0.07) 1px, transparent 1px)
+              `,
+              backgroundSize: '50px 50px',
+              maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+              WebkitMaskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+            }}
+          />
+        )}
+
+        {/* Pink orb */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            top: '20%', left: '-10%',
+            width: '600px', height: '600px',
+            borderRadius: '50%',
+            background: isDark
+              ? 'radial-gradient(circle, rgba(26,63,150,0.22) 0%, transparent 60%)'
+              : 'radial-gradient(circle, rgba(26,63,150,0.09) 0%, transparent 60%)',
+            animation: 'glowPulse 6s ease-in-out infinite',
+          }}
+        />
+
+        {/* Teal orb */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            top: '-10%', right: '-5%',
+            width: '420px', height: '420px',
+            borderRadius: '50%',
+            background: isDark
+              ? 'radial-gradient(circle, rgba(37,150,190,0.16) 0%, transparent 65%)'
+              : 'radial-gradient(circle, rgba(37,150,190,0.07) 0%, transparent 65%)',
+            animation: 'glowPulse 8s ease-in-out infinite reverse',
+          }}
+        />
+
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-10 pt-20 pb-28 lg:pt-28 lg:pb-36">
+          <div className="max-w-4xl">
+            <p
+              className="font-mono text-xs tracking-[0.22em] uppercase mb-6 animate-fade-up-1"
+              style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
+            >
+              // platform · learn · hack · evolve
+            </p>
+            <h1
+              className="font-display mb-8 animate-fade-up-2"
+              style={{
+                fontSize: 'clamp(2.6rem, 6.5vw, 5rem)',
+                lineHeight: 1.05,
+                letterSpacing: '-0.015em',
+                color: isDark ? '#EEF3FC' : '#0A1545',
+              }}
+            >
+              Aprende ciberseguridad{' '}
+              <span style={{
+                color: '#1A3F96',
+                textShadow: isDark ? '0 0 40px rgba(26,63,150,0.5)' : 'none',
+              }}>
+                rompiendo cosas
+              </span>
+              .
+            </h1>
+            <p
+              className="text-lg lg:text-xl font-light max-w-2xl mb-12 animate-fade-up-3"
+              style={{ color: isDark ? '#7B9FE8' : '#2451C8', lineHeight: 1.6 }}
+            >
+              CyberSec Labs es la plataforma colombiana de laboratorios prácticos
+              donde futuros hackers convierten teoría en skills reales. Sin diapositivas, sin atajos.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-4 animate-fade-up-4">
+              {token ? (
+                <Link
+                  to="/dashboard"
+                  className="btn-neon px-7 py-4 rounded-xl text-[15px] font-semibold"
+                >
+                  Ir al dashboard →
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/register"
+                    className="btn-neon px-7 py-4 rounded-xl text-[15px] font-semibold"
+                  >
+                    Empezar gratis →
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="nav-link text-[15px] font-medium px-2 py-1"
+                    style={{ color: isDark ? '#7B9FE8' : '#1A3F96' }}
+                  >
+                    Ya tengo cuenta
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Stats */}
+            <div className="flex flex-wrap gap-12 mt-20 animate-fade-up-5">
+              {STATS.map(({ value, label }) => (
+                <div key={label}>
+                  <p
+                    className="font-display leading-none"
+                    style={{ fontSize: '2.75rem', color: '#F5C500' }}
+                  >
+                    {value}
+                  </p>
+                  <p
+                    className="font-mono text-[10px] tracking-[0.22em] uppercase mt-2"
+                    style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
+                  >
+                    {label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FEATURES ─── */}
+      <section
+        className="border-t"
+        style={{ borderColor: isDark ? 'rgba(26,63,150,0.12)' : 'rgba(26,63,150,0.10)' }}
+      >
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-20 lg:py-28">
+          <div className="max-w-3xl mb-16">
+            <p
+              className="font-mono text-xs tracking-[0.22em] uppercase mb-4"
+              style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
+            >
+              // ¿qué hace CyberSec Labs diferente?
+            </p>
+            <h2
+              className="font-display"
+              style={{
+                fontSize: 'clamp(1.9rem, 3.5vw, 2.75rem)',
+                lineHeight: 1.15,
+                color: isDark ? '#EEF3FC' : '#0A1545',
+              }}
+            >
+              Una plataforma diseñada para gente que prefiere{' '}
+              <span style={{ color: '#1A3F96' }}>romper cosas</span>{' '}
+              que leerlas.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {FEATURES.map(({ title, body, icon, accent }) => (
+              <div
+                key={title}
+                className="rounded-2xl p-8 transition-all duration-200 cursor-default"
+                style={{
+                  background: isDark ? 'rgba(6, 13, 31, 0.7)' : '#f8faff',
+                  border: `1px solid ${isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.10)'}`,
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLElement
+                  el.style.transform = 'translateY(-3px)'
+                  el.style.boxShadow = isDark
+                    ? `0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px ${accent}30`
+                    : `0 8px 32px rgba(10,21,69,0.08), 0 0 0 1px ${accent}30`
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLElement
+                  el.style.transform = 'translateY(0)'
+                  el.style.boxShadow = 'none'
+                }}
+              >
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
+                  style={{
+                    background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.03)',
+                    border: `1px solid ${accent}30`,
+                    color: accent,
+                  }}
+                >
+                  {icon}
+                </div>
+                <h3
+                  className="font-display mb-3"
+                  style={{ fontSize: '1.5rem', color: isDark ? '#EEF3FC' : '#0A1545' }}
+                >
+                  {title}
+                </h3>
+                <p
+                  className="text-[15px] font-light"
+                  style={{ color: isDark ? '#4A70CC' : '#2451C8', lineHeight: 1.65 }}
+                >
+                  {body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── RANKING ─── */}
+      <section
+        className="border-t relative overflow-hidden"
+        style={{
+          borderColor: isDark ? 'rgba(26,63,150,0.12)' : 'rgba(26,63,150,0.10)',
+          background: isDark
+            ? 'linear-gradient(180deg, #060D1F 0%, #091520 100%)'
+            : 'linear-gradient(180deg, #EEF3FC 0%, #E8EEFA 100%)',
+        }}
+      >
+        {/* Gold orb */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            top: '20%', right: '-15%',
+            width: '500px', height: '500px',
+            borderRadius: '50%',
+            background: isDark
+              ? 'radial-gradient(circle, rgba(245,197,0,0.08) 0%, transparent 65%)'
+              : 'radial-gradient(circle, rgba(245,197,0,0.05) 0%, transparent 65%)',
+          }}
+        />
+
+        <div className="relative max-w-3xl mx-auto px-6 lg:px-10 py-20 lg:py-28">
+          <div className="mb-12">
+            <p
+              className="font-mono text-xs tracking-[0.22em] uppercase mb-4"
+              style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
+            >
+              // top operadores
+            </p>
+            <h2
+              className="font-display mb-4"
+              style={{
+                fontSize: 'clamp(1.9rem, 3.5vw, 2.75rem)',
+                lineHeight: 1.15,
+                color: isDark ? '#EEF3FC' : '#0A1545',
+              }}
+            >
+              Los <span style={{ color: '#F5C500' }}>5 mejores</span> hackers de la plataforma.
+            </h2>
+            <p
+              className="text-[15px] max-w-xl"
+              style={{ color: isDark ? '#4A70CC' : '#1A3F96', lineHeight: 1.65 }}
+            >
+              Ranking en tiempo real. Cada lab completado te acerca un paso más a la cima.
+            </p>
+          </div>
+
+          <Ranking limit={5} />
+        </div>
+      </section>
+
+      {/* ─── CTA ─── */}
+      {!token && (
+        <section
+          className="border-t"
+          style={{ borderColor: isDark ? 'rgba(26,63,150,0.12)' : 'rgba(26,63,150,0.10)' }}
+        >
+          <div className="max-w-4xl mx-auto px-6 lg:px-10 py-20 lg:py-28 text-center">
+            <p
+              className="font-mono text-xs tracking-[0.22em] uppercase mb-5"
+              style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
+            >
+              // ready_player_one
+            </p>
+            <h2
+              className="font-display mb-6"
+              style={{
+                fontSize: 'clamp(2rem, 4.5vw, 3.25rem)',
+                lineHeight: 1.1,
+                color: isDark ? '#EEF3FC' : '#0A1545',
+              }}
+            >
+              ¿Listo para <span style={{ color: '#1A3F96' }}>hackear</span>?
+            </h2>
+            <p
+              className="text-base lg:text-lg font-light max-w-xl mx-auto mb-10"
+              style={{ color: isDark ? '#4A70CC' : '#2451C8', lineHeight: 1.65 }}
+            >
+              Crea tu cuenta gratis, completa tu primer lab y empieza a sumar puntos.
+            </p>
+            <Link
+              to="/register"
+              className="btn-neon inline-block px-8 py-4 rounded-xl text-[15px] font-semibold"
+            >
+              Crear cuenta gratis →
+            </Link>
+          </div>
+        </section>
+      )}
+
+      <Footer />
+    </div>
+  )
+}
