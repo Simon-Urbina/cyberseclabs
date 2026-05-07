@@ -1,35 +1,61 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { ThemeProvider, useTheme } from './context/ThemeContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import Header from './components/Header'
+import LandingPage from './pages/LandingPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import DashboardPage from './pages/DashboardPage'
 
-function App() {
-  const [count, setCount] = useState(0)
+function PrivateRoute({ children }: { children: React.ReactNode }) {
+  const { token } = useAuth()
+  return token ? <>{children}</> : <Navigate to="/login" replace />
+}
+
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { token } = useAuth()
+  return !token ? <>{children}</> : <Navigate to="/dashboard" replace />
+}
+
+function AppShell() {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="min-h-screen" style={{ background: isDark ? '#060D1F' : '#EEF3FC' }}>
+      <Routes>
+        {/* Public landing */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Auth pages — own layout, no header */}
+        <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+        <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+
+        {/* App pages — header + content */}
+        <Route path="/dashboard" element={
+          <PrivateRoute>
+            <>
+              <Header />
+              <DashboardPage />
+            </>
+          </PrivateRoute>
+        } />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </div>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppShell />
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  )
+}
