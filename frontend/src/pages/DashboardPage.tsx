@@ -13,7 +13,7 @@ interface FullProfile {
   username: string
   email: string
   bio: string | null
-  avatar_url?: string | null
+  profileImage?: string | null
   points: number
   rank: number | null
   completedLabs: number
@@ -126,7 +126,7 @@ export default function DashboardPage() {
               {/* Avatar + greeting */}
               <div className="flex items-center gap-6">
                 <UserAvatar
-                  src={profile?.avatar_url}
+                  src={profile?.profileImage ? `data:image/jpeg;base64,${profile.profileImage}` : null}
                   username={profile?.username ?? user?.username ?? '?'}
                   size={80}
                   isDark={isDark}

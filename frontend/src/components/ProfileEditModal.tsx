@@ -10,6 +10,7 @@ interface FullProfile {
   username: string
   email: string
   bio: string | null
+  profileImage?: string | null
   points: number
   rank: number | null
   completedLabs: number
@@ -137,6 +138,11 @@ export default function ProfileEditModal({ open, onClose, initialProfile, onUpda
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [avatarLoading, setAvatarLoading] = useState(false)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(
+    initialProfile.profileImage ? `data:image/jpeg;base64,${initialProfile.profileImage}` : null
+  )
+  const [avatarImgError, setAvatarImgError] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -149,8 +155,55 @@ export default function ProfileEditModal({ open, onClose, initialProfile, onUpda
       setError('')
       setSuccess('')
       setTab('profile')
+      setAvatarPreview(initialProfile.profileImage ? `data:image/jpeg;base64,${initialProfile.profileImage}` : null)
+      setAvatarImgError(false)
     }
   }, [open, initialProfile])
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!['image/jpeg', 'image/jpg'].includes(file.type)) {
+      setError('Solo se aceptan imágenes JPG/JPEG.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('La imagen no puede superar los 5 MB.')
+      return
+    }
+
+    const preview = URL.createObjectURL(file)
+    setAvatarPreview(preview)
+    setAvatarImgError(false)
+    setError('')
+    setAvatarLoading(true)
+
+    try {
+      const token = localStorage.getItem('token')
+      const base = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+      const formData = new FormData()
+      formData.append('avatar', file)
+      const res = await fetch(`${base}/api/users/me/avatar`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Error al subir la foto.')
+
+      const updated = await (await fetch(`${base}/api/users/me`, {
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      })).json()
+      onUpdated(updated)
+      setSuccess('Foto de perfil actualizada.')
+    } catch (err: any) {
+      setError(err.message)
+      setAvatarPreview(initialProfile.profileImage ? `data:image/jpeg;base64,${initialProfile.profileImage}` : null)
+    } finally {
+      setAvatarLoading(false)
+      e.target.value = ''
+    }
+  }
 
   useEffect(() => {
     if (!open) return
@@ -305,6 +358,69 @@ export default function ProfileEditModal({ open, onClose, initialProfile, onUpda
         <div className="px-7 py-7 overflow-y-auto" style={{ flex: 1 }}>
           {tab === 'profile' && (
             <form onSubmit={submitProfile} className="space-y-7">
+              {/* Avatar upload */}
+              <div className="flex items-center gap-5">
+                <label className="relative cursor-pointer group shrink-0" title="Cambiar foto de perfil">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/jpg"
+                    className="sr-only"
+                    onChange={handleAvatarChange}
+                    disabled={avatarLoading}
+                  />
+                  <div
+                    style={{
+                      width: 72, height: 72,
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      background: isDark ? 'rgba(26,63,150,0.15)' : 'rgba(26,63,150,0.08)',
+                      border: `2px solid ${isDark ? 'rgba(26,63,150,0.40)' : 'rgba(26,63,150,0.25)'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      position: 'relative',
+                    }}
+                  >
+                    {(avatarPreview && !avatarImgError) ? (
+                      <img
+                        src={avatarPreview}
+                        alt="Avatar"
+                        onError={() => setAvatarImgError(true)}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <svg width="38" height="38" viewBox="0 0 24 24" fill="none"
+                        stroke={isDark ? '#7B9FE8' : '#1A3F96'} strokeWidth="1.5"
+                        strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8" />
+                      </svg>
+                    )}
+                    {/* Overlay on hover */}
+                    <div
+                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ background: 'rgba(6,13,31,0.55)', borderRadius: '50%' }}
+                    >
+                      {avatarLoading ? (
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EEF3FC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                          <polyline points="17 8 12 3 7 8"/>
+                          <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                </label>
+                <div>
+                  <p className="text-[13px] font-medium" style={{ color: isDark ? '#C8D5EE' : '#0A1545' }}>
+                    Foto de perfil
+                  </p>
+                  <p className="font-mono text-[10px] mt-1" style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}>
+                    JPG · máx 5 MB
+                  </p>
+                </div>
+              </div>
+
               <Field label="Username" type="text" value={username} onChange={setUsername} isDark={isDark} autoFocus />
               <Field label="Email" type="email" value={email} onChange={setEmail} isDark={isDark} />
               <TextareaField
