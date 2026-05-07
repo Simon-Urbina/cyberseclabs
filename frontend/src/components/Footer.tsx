@@ -91,7 +91,7 @@ export default function Footer() {
               <div>
                 <p
                   className="font-display text-[18px] leading-none"
-                  style={{ color: isDark ? '#EEF3FC' : '#0A1545' }}
+                  style={{ color: isDark ? '#C8D5EE' : '#0A1545' }}
                 >
                   CyberSec<span style={{ color: '#1A3F96' }}> Labs</span>
                 </p>

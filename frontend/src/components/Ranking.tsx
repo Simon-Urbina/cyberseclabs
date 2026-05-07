@@ -149,7 +149,7 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
                     className="font-display truncate"
                     style={{
                       fontSize: isTop ? '1.35rem' : '1.15rem',
-                      color: isDark ? '#EEF3FC' : '#0A1545',
+                      color: isDark ? '#C8D5EE' : '#0A1545',
                     }}
                   >
                     {row.username}
@@ -194,7 +194,7 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
               <div className="shrink-0 text-right">
                 <p
                   className="font-display leading-none"
-                  style={{ fontSize: '1.5rem', color: isDark ? '#EEF3FC' : '#0A1545' }}
+                  style={{ fontSize: '1.5rem', color: isDark ? '#C8D5EE' : '#0A1545' }}
                 >
                   {row.points.toLocaleString('es-CO')}
                 </p>

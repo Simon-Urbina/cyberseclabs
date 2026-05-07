@@ -126,7 +126,7 @@ export default function LandingPage() {
                 fontSize: 'clamp(2.6rem, 6.5vw, 5rem)',
                 lineHeight: 1.05,
                 letterSpacing: '-0.015em',
-                color: isDark ? '#EEF3FC' : '#0A1545',
+                color: isDark ? '#C8D5EE' : '#0A1545',
               }}
             >
               Aprende ciberseguridad{' '}
@@ -214,7 +214,7 @@ export default function LandingPage() {
               style={{
                 fontSize: 'clamp(1.9rem, 3.5vw, 2.75rem)',
                 lineHeight: 1.15,
-                color: isDark ? '#EEF3FC' : '#0A1545',
+                color: isDark ? '#C8D5EE' : '#0A1545',
               }}
             >
               Una plataforma diseñada para gente que prefiere{' '}
@@ -309,7 +309,7 @@ export default function LandingPage() {
               style={{
                 fontSize: 'clamp(1.9rem, 3.5vw, 2.75rem)',
                 lineHeight: 1.15,
-                color: isDark ? '#EEF3FC' : '#0A1545',
+                color: isDark ? '#C8D5EE' : '#0A1545',
               }}
             >
               Los <span style={{ color: '#F5C500' }}>5 mejores</span> hackers de la plataforma.
@@ -344,7 +344,7 @@ export default function LandingPage() {
               style={{
                 fontSize: 'clamp(2rem, 4.5vw, 3.25rem)',
                 lineHeight: 1.1,
-                color: isDark ? '#EEF3FC' : '#0A1545',
+                color: isDark ? '#C8D5EE' : '#0A1545',
               }}
             >
               ¿Listo para <span style={{ color: '#1A3F96' }}>hackear</span>?
