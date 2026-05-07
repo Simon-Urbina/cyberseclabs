@@ -48,7 +48,7 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
               key={i}
               className="rounded-2xl px-6 py-5 animate-pulse"
               style={{
-                background: isDark ? 'rgba(6,13,31,0.5)' : '#f8faff',
+                background: isDark ? 'rgba(13,27,70,0.85)' : '#f8faff',
                 border: `1px solid ${isDark ? 'rgba(26,63,150,0.10)' : 'rgba(26,63,150,0.08)'}`,
                 opacity: 0.5,
               }}
@@ -63,7 +63,7 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
         <div
           className="rounded-2xl px-6 py-5"
           style={{
-            background: isDark ? 'rgba(6,13,31,0.5)' : '#eef0f8',
+            background: isDark ? 'rgba(13,27,70,0.85)' : '#eef0f8',
             border: '1px solid rgba(26,63,150,0.25)',
             borderLeft: '3px solid #1A3F96',
           }}
@@ -77,7 +77,7 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
         <div
           className="rounded-2xl px-6 py-10 text-center"
           style={{
-            background: isDark ? 'rgba(6,13,31,0.6)' : '#f8faff',
+            background: isDark ? 'rgba(13,27,70,0.85)' : '#f8faff',
             border: `1px solid ${isDark ? 'rgba(26,63,150,0.12)' : 'rgba(26,63,150,0.10)'}`,
           }}
         >
@@ -98,7 +98,7 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
             key={row.id}
             className="rounded-2xl px-6 py-5 transition-all duration-200 cursor-default relative overflow-hidden"
             style={{
-              background: isDark ? 'rgba(6, 13, 31, 0.7)' : '#f8faff',
+              background: isDark ? 'rgba(13,27,70,0.85)' : '#f8faff',
               border: `1px solid ${isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.10)'}`,
               ...(isTop && {
                 boxShadow: isDark

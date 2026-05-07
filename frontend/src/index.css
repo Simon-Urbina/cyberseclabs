@@ -223,14 +223,14 @@
    CARD
 ──────────────────────────────────────────────── */
 .glass-card {
-  background: rgba(6, 13, 31, 0.6);
+  background: rgba(13, 27, 70, 0.85);
   border: 1px solid rgba(26, 63, 150, 0.15);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
 .glass-card-violet {
-  background: rgba(6, 13, 31, 0.75);
+  background: rgba(13, 27, 70, 0.90);
   border: 1px solid rgba(26, 63, 150, 0.18);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);

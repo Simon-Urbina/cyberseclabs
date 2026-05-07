@@ -207,7 +207,7 @@ export default function AuthLayout({
           <div
             className="w-full max-w-[440px] animate-slide-in"
             style={{
-              background: isDark ? 'rgba(6,13,31,0.50)' : '#ffffff',
+              background: isDark ? 'rgba(13,27,70,0.85)' : '#ffffff',
               border: `1px solid ${isDark ? 'rgba(26,63,150,0.12)' : 'rgba(26,63,150,0.16)'}`,
               borderRadius: '24px',
               padding: '44px',

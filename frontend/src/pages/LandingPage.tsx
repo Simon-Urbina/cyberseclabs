@@ -229,7 +229,7 @@ export default function LandingPage() {
                 key={title}
                 className="rounded-2xl p-8 transition-all duration-200 cursor-default"
                 style={{
-                  background: isDark ? 'rgba(6, 13, 31, 0.7)' : '#f8faff',
+                  background: isDark ? 'rgba(13,27,70,0.85)' : '#f8faff',
                   border: `1px solid ${isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.10)'}`,
                 }}
                 onMouseEnter={e => {
