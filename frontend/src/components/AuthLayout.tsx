@@ -206,12 +206,13 @@ export default function AuthLayout({
         <div className="flex-1 flex items-center justify-center px-8 py-10">
           <div
             className="w-full max-w-[440px] animate-slide-in"
-            style={isDark ? {
-              background: 'rgba(6, 13, 31, 0.45)',
-              border: '1px solid rgba(26,63,150,0.10)',
+            style={{
+              background: isDark ? 'rgba(6,13,31,0.50)' : '#ffffff',
+              border: `1px solid ${isDark ? 'rgba(26,63,150,0.12)' : 'rgba(26,63,150,0.16)'}`,
               borderRadius: '24px',
               padding: '44px',
-            } : {}}
+              boxShadow: isDark ? 'none' : '0 4px 40px rgba(10,21,69,0.07)',
+            }}
           >
             {children}
           </div>

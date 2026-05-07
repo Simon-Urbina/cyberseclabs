@@ -262,7 +262,8 @@
   color: #EEF3FC;
   transition: border-color 0.2s ease;
 }
-.input-terminal::placeholder { color: rgba(238, 243, 252, 0.25); }
+.input-terminal::placeholder { color: rgba(238, 243, 252, 0.28); }
+html:not(.dark) .input-terminal::placeholder { color: rgba(10, 21, 69, 0.32); }
 .input-terminal:focus { border-bottom-color: #2596be; }
 
 /* ────────────────────────────────────────────────
