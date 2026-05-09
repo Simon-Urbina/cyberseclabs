@@ -200,7 +200,7 @@ export default function DashboardPage() {
             {stats.map(({ label, value, unit, icon, accent }) => (
               <div
                 key={label}
-                className="rounded-2xl p-8 transition-all duration-200 cursor-default"
+                className="rounded-2xl overflow-hidden transition-all duration-200 cursor-default relative"
                 style={{
                   background: isDark ? 'rgba(13,27,70,0.85)' : '#f8faff',
                   border: `1px solid ${isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.10)'}`,
@@ -208,7 +208,7 @@ export default function DashboardPage() {
                 onMouseEnter={e => {
                   const el = e.currentTarget as HTMLElement
                   el.style.transform = 'translateY(-3px)'
-                  if (isDark) el.style.boxShadow = `0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(26,63,150,0.20)`
+                  el.style.boxShadow = `0 8px 40px rgba(0,0,0,0.25), 0 0 0 1px ${accent}40`
                 }}
                 onMouseLeave={e => {
                   const el = e.currentTarget as HTMLElement
@@ -216,33 +216,63 @@ export default function DashboardPage() {
                   el.style.boxShadow = 'none'
                 }}
               >
+                {/* Top accent strip */}
+                <div style={{ height: '2px', background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
+
+                {/* Corner glow */}
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-6"
+                  className="absolute pointer-events-none"
                   style={{
-                    background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.04)',
-                    border: `1px solid ${accent}22`,
-                    color: accent,
+                    bottom: '-20%', right: '-10%',
+                    width: '180px', height: '180px',
+                    borderRadius: '50%',
+                    background: `radial-gradient(circle, ${accent}18 0%, transparent 70%)`,
                   }}
-                >
-                  {icon}
+                />
+
+                <div className="relative p-7">
+                  {/* Top row: label kicker + icon */}
+                  <div className="flex items-start justify-between mb-6">
+                    <p
+                      className="font-mono text-[10px] tracking-[0.22em] uppercase"
+                      style={{ color: accent }}
+                    >
+                      {label}
+                    </p>
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{
+                        background: `${accent}18`,
+                        border: `1px solid ${accent}35`,
+                        color: accent,
+                      }}
+                    >
+                      {icon}
+                    </div>
+                  </div>
+
+                  {/* Value */}
+                  <p
+                    className="num-display"
+                    style={{ fontSize: '3rem', lineHeight: 1.1, color: isDark ? '#C8D5EE' : '#0A1545' }}
+                  >
+                    {loadingProfile ? '—' : value}
+                    {unit && (
+                      <span className="font-mono ml-2" style={{ fontSize: '1rem', color: accent, letterSpacing: '0.05em' }}>
+                        {unit}
+                      </span>
+                    )}
+                  </p>
+
+                  {/* Bottom accent line */}
+                  <div
+                    style={{
+                      marginTop: '1.5rem',
+                      height: '1px',
+                      background: `linear-gradient(90deg, ${accent}55, ${accent}18, transparent)`,
+                    }}
+                  />
                 </div>
-                <p
-                  className="font-display mb-2"
-                  style={{ fontSize: '3rem', lineHeight: 1, color: isDark ? '#C8D5EE' : '#0A1545' }}
-                >
-                  {loadingProfile ? '—' : value}
-                  {unit && (
-                    <span className="font-mono ml-2" style={{ fontSize: '1rem', color: accent, letterSpacing: '0.05em' }}>
-                      {unit}
-                    </span>
-                  )}
-                </p>
-                <p
-                  className="text-sm font-medium"
-                  style={{ color: isDark ? '#3A5AB8' : '#1A3F96', letterSpacing: '0.02em' }}
-                >
-                  {label}
-                </p>
               </div>
             ))}
           </section>
@@ -259,7 +289,6 @@ export default function DashboardPage() {
                     : `Estás inscrito en ${enrolledCourses.length} curso${enrolledCourses.length === 1 ? '' : 's'}.`
                 }
                 isDark={isDark}
-                badge={enrolledCourses.length > 0 ? `${enrolledCourses.length}` : undefined}
               />
 
               {coursesLoading && enrolledCourses.length === 0 ? (

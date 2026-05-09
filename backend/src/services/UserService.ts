@@ -1,8 +1,9 @@
 import { UserDAO } from '../daos/UserDAO.js'
-import { HTTPError } from '../utils/errors.js'
+import { HTTPError, ValidationError } from '../utils/errors.js'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 const ALLOWED_MIMETYPES = ['image/jpeg', 'image/jpg']
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export class UserService {
   static async getPublicProfile(username: string) {
@@ -44,10 +45,67 @@ export class UserService {
     }
   }
 
-  static async updateProfile(userId: string, data: { bio?: string | null }) {
-    const user = await UserDAO.update(userId, data)
+  static async updateProfile(
+    userId: string,
+    data: { username?: string; email?: string; bio?: string | null },
+  ) {
+    const errors: string[] = []
+    const patch: { username?: string; email?: string; bio?: string | null } = {}
+
+    if (data.username !== undefined) {
+      const u = data.username.trim()
+      if (u.length < 3 || u.length > 50)
+        errors.push('El username debe tener entre 3 y 50 caracteres.')
+      else patch.username = u
+    }
+
+    if (data.email !== undefined) {
+      const e = data.email.trim().toLowerCase()
+      if (!EMAIL_REGEX.test(e))
+        errors.push('El email no tiene un formato válido.')
+      else patch.email = e
+    }
+
+    if (data.bio !== undefined) {
+      const b = data.bio === null ? null : String(data.bio).trim()
+      if (b !== null && b.length > 500)
+        errors.push('La biografía no puede superar los 500 caracteres.')
+      else patch.bio = b === '' ? null : b
+    }
+
+    if (errors.length) throw new ValidationError(errors)
+
+    if (patch.username) {
+      const taken = await UserDAO.findByUsername(patch.username)
+      if (taken && taken.id !== userId)
+        throw new HTTPError(409, 'El username ya está en uso.')
+    }
+    if (patch.email) {
+      const taken = await UserDAO.findByEmail(patch.email)
+      if (taken && taken.id !== userId)
+        throw new HTTPError(409, 'El email ya está registrado.')
+    }
+
+    const user = await UserDAO.update(userId, patch)
     if (!user) throw new HTTPError(404, 'Usuario no encontrado.')
     return UserService.getMyProfile(userId)
+  }
+
+  static async changePassword(
+    userId: string,
+    data: { currentPassword: string; newPassword: string },
+  ): Promise<void> {
+    if (!data.newPassword || data.newPassword.length < 8)
+      throw new ValidationError(['La nueva contraseña debe tener al menos 8 caracteres.'])
+
+    const user = await UserDAO.findById(userId)
+    if (!user) throw new HTTPError(404, 'Usuario no encontrado.')
+
+    const ok = await Bun.password.verify(data.currentPassword, user.passwordHash)
+    if (!ok) throw new HTTPError(401, 'La contraseña actual es incorrecta.')
+
+    const newHash = await Bun.password.hash(data.newPassword)
+    await UserDAO.updatePassword(userId, newHash)
   }
 
   static async updateAvatar(

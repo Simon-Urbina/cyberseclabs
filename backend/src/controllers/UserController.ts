@@ -10,8 +10,19 @@ export class UserController {
 
   static async updateProfile(c: Context) {
     const user = c.get('user') as TokenPayload
-    const { bio } = await c.req.json()
-    return c.json(await UserService.updateProfile(user.id, { bio }))
+    const body = await c.req.json()
+    const patch: { username?: string; email?: string; bio?: string | null } = {}
+    if (body.username !== undefined) patch.username = body.username
+    if (body.email !== undefined) patch.email = body.email
+    if (body.bio !== undefined) patch.bio = body.bio
+    return c.json(await UserService.updateProfile(user.id, patch))
+  }
+
+  static async changePassword(c: Context) {
+    const user = c.get('user') as TokenPayload
+    const { currentPassword, newPassword } = await c.req.json()
+    await UserService.changePassword(user.id, { currentPassword, newPassword })
+    return c.json({ message: 'Contraseña actualizada.' })
   }
 
   static async updateAvatar(c: Context) {

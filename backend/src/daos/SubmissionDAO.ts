@@ -17,7 +17,7 @@ export class SubmissionDAO {
          answered_questions_count, correct_answers_count, score_percent)
       VALUES (
         ${data.userId}, ${data.laboratoryId}, ${data.attemptNumber},
-        ${sql.json(data.answers)}, ${data.answeredQuestionsCount},
+        ${sql.json(data.answers as never)}, ${data.answeredQuestionsCount},
         ${data.correctAnswersCount}, ${data.scorePercent}
       )
       RETURNING *

@@ -1,27 +1,27 @@
 import type { Context } from 'hono'
 import { CourseService } from '../services/CourseService.js'
-import type { TokenPayload, UserRole } from '../types.js'
+import type { TokenPayload } from '../types.js'
 
 export class CourseController {
   static async listCourses(c: Context) {
     const user = c.get('user') as TokenPayload | undefined
-    return c.json(await CourseService.listCourses(user?.role))
+    return c.json(await CourseService.listCourses({ userId: user?.id, role: user?.role }))
   }
 
   static async getCourse(c: Context) {
     const user = c.get('user') as TokenPayload | undefined
-    return c.json(await CourseService.getCourse(c.req.param('slug'), user?.role))
+    return c.json(await CourseService.getCourse(c.req.param('slug')!, user?.role))
   }
 
   static async enroll(c: Context) {
     const user = c.get('user') as TokenPayload
-    const enrollment = await CourseService.enrollUser(user.id, c.req.param('slug'))
+    const enrollment = await CourseService.enrollUser(user.id, c.req.param('slug')!)
     return c.json(enrollment, 201)
   }
 
   static async getModules(c: Context) {
     const user = c.get('user') as TokenPayload | undefined
-    return c.json(await CourseService.getModules(c.req.param('slug'), user?.role))
+    return c.json(await CourseService.getModules(c.req.param('slug')!, user?.role))
   }
 
   static async getLaboratories(c: Context) {

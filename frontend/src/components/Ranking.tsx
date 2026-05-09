@@ -18,7 +18,7 @@ interface RankingResponse {
 const RANK_ACCENTS: Record<number, { color: string; label: string }> = {
   1: { color: '#F5C500', label: 'GOLD' },
   2: { color: '#7B9FE8', label: 'SILVER' },
-  3: { color: '#2596be', label: 'BRONZE' },
+  3: { color: '#CD7F32', label: 'BRONZE' },
 }
 
 export default function Ranking({ limit = 5 }: { limit?: number }) {
@@ -131,7 +131,7 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
             <div className="relative flex items-center gap-5">
               {/* Rank number */}
               <div
-                className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-display"
+                className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center num-display"
                 style={{
                   fontSize: '1.5rem',
                   background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.04)',
@@ -193,7 +193,7 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
               {/* Points */}
               <div className="shrink-0 text-right">
                 <p
-                  className="font-display leading-none"
+                  className="num-display leading-none"
                   style={{ fontSize: '1.5rem', color: isDark ? '#C8D5EE' : '#0A1545' }}
                 >
                   {row.points.toLocaleString('es-CO')}

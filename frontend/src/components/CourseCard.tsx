@@ -10,6 +10,7 @@ export interface Course {
   labCount: number
   totalPoints: number
   isEnrolled: boolean
+  completedLabsCount?: number
 }
 
 const DIFFICULTY_META: Record<Course['difficulty'], { color: string; label: string; bars: number }> = {
@@ -147,6 +148,42 @@ export default function CourseCard({ course, onEnroll, onContinue }: Props) {
           <Stat label="Puntos" value={course.totalPoints.toLocaleString('es-CO')} isDark={isDark} accent="#F5C500" />
         </div>
 
+        {/* Progress bar — enrolled courses only */}
+        {course.isEnrolled && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <span
+                className="font-mono text-[9px] tracking-[0.18em] uppercase"
+                style={{ color: diff.color }}
+              >
+                Progreso
+              </span>
+              <span
+                className="font-mono text-[11px]"
+                style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}
+              >
+                <span className="num-display" style={{ fontSize: '0.8rem', color: isDark ? '#C8D5EE' : '#0A1545' }}>
+                  {course.completedLabsCount ?? 0}
+                </span>
+                {' / '}{course.labCount} labs
+              </span>
+            </div>
+            <div
+              className="h-1.5 rounded-full overflow-hidden"
+              style={{ background: isDark ? 'rgba(26,63,150,0.12)' : 'rgba(26,63,150,0.08)' }}
+            >
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${course.labCount > 0 ? ((course.completedLabsCount ?? 0) / course.labCount) * 100 : 0}%`,
+                  background: `linear-gradient(90deg, ${diff.color}, ${diff.color}bb)`,
+                  minWidth: (course.completedLabsCount ?? 0) > 0 ? '6px' : '0px',
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* CTA */}
         {course.isEnrolled ? (
           <button
@@ -185,7 +222,7 @@ function Stat({ label, value, isDark, accent }: { label: string; value: string; 
   return (
     <div className="text-center">
       <p
-        className="font-display leading-none"
+        className="num-display leading-none"
         style={{ fontSize: '1.25rem', color: isDark ? '#C8D5EE' : '#0A1545' }}
       >
         {value}

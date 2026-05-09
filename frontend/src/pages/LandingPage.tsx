@@ -178,7 +178,7 @@ export default function LandingPage() {
               {STATS.map(({ value, label }) => (
                 <div key={label}>
                   <p
-                    className="font-display leading-none"
+                    className="num-display leading-none"
                     style={{ fontSize: '2.75rem', color: '#F5C500' }}
                   >
                     {value}

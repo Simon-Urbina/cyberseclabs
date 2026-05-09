@@ -11,8 +11,11 @@ import { HTTPError } from '../utils/errors.js'
 import type { UserRole, CourseEnrollment } from '../types.js'
 
 export class CourseService {
-  static async listCourses(role?: UserRole) {
-    return CourseDAO.findAll(role !== 'admin')
+  static async listCourses(opts: { userId?: string; role?: UserRole } = {}) {
+    return CourseDAO.findAllWithStats({
+      userId: opts.userId,
+      publishedOnly: opts.role !== 'admin',
+    })
   }
 
   static async getCourse(slug: string, role?: UserRole) {

@@ -9,7 +9,7 @@ import { QuestionActivityDAO } from '../daos/QuestionActivityDAO.js'
 import { HTTPError } from '../utils/errors.js'
 import type { TokenPayload } from '../types.js'
 
-const router = new Hono()
+const router = new Hono<{ Variables: { user: TokenPayload } }>()
 router.use('*', requireAdmin)
 
 // ── Courses ──────────────────────────────────────────────────────────────────

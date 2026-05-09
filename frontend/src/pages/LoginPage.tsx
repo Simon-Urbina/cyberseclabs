@@ -16,7 +16,7 @@ function InputField({
     <div className="space-y-2">
       <label
         className="block font-mono text-[10px] tracking-[0.18em] uppercase"
-        style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
+        style={{ color: isDark ? '#7B9FE8' : '#1A3F96' }}
       >
         {label}
       </label>
@@ -92,7 +92,7 @@ export default function LoginPage() {
       <div className="mb-10">
         <p
           className="font-mono text-[10px] tracking-[0.22em] uppercase mb-4"
-          style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
+          style={{ color: isDark ? '#7B9FE8' : '#1A3F96' }}
         >
           // acceso a la plataforma
         </p>
@@ -102,7 +102,7 @@ export default function LoginPage() {
         >
           Iniciar sesión
         </h2>
-        <p className="text-[15px] mt-3" style={{ color: isDark ? '#4A70CC' : '#2451C8' }}>
+        <p className="text-[15px] mt-3" style={{ color: isDark ? '#7B9FE8' : '#2451C8' }}>
           ¿Primera vez?{' '}
           <Link
             to="/register"

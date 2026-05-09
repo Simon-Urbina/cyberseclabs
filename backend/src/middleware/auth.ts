@@ -15,6 +15,19 @@ function extractToken(c: Parameters<MiddlewareHandler>[0]): string {
   return auth.slice(7)
 }
 
+export const optionalAuth: MiddlewareHandler = async (c, next) => {
+  const auth = c.req.header('Authorization')
+  if (auth?.startsWith('Bearer ')) {
+    try {
+      const payload = verify(auth.slice(7), getSecret()) as TokenPayload
+      c.set('user', payload)
+    } catch {
+      // ignore invalid tokens — endpoint is reachable without auth
+    }
+  }
+  await next()
+}
+
 export const requireAuth: MiddlewareHandler = async (c, next) => {
   try {
     const payload = verify(extractToken(c), getSecret()) as TokenPayload

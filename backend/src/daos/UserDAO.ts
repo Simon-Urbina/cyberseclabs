@@ -32,14 +32,30 @@ export class UserDAO {
     return row
   }
 
-  static async update(id: string, data: { bio?: string | null }): Promise<User | null> {
+  static async update(
+    id: string,
+    data: { username?: string; email?: string; bio?: string | null },
+  ): Promise<User | null> {
+    const updates: Record<string, string | null> = {}
+    if (data.username !== undefined) updates.username = data.username
+    if (data.email !== undefined) updates.email = data.email
+    if (data.bio !== undefined) updates.bio = data.bio
+
+    if (Object.keys(updates).length === 0) return UserDAO.findById(id)
+
     const [row] = await sql<User[]>`
-      UPDATE users
-      SET bio = ${data.bio ?? null}
+      UPDATE users SET ${sql(updates)}
       WHERE id = ${id} AND deleted_at IS NULL
       RETURNING *
     `
     return row ?? null
+  }
+
+  static async updatePassword(id: string, passwordHash: string): Promise<void> {
+    await sql`
+      UPDATE users SET password_hash = ${passwordHash}
+      WHERE id = ${id} AND deleted_at IS NULL
+    `
   }
 
   static async updateAvatar(id: string, image: Buffer): Promise<User | null> {

@@ -124,7 +124,7 @@ export default function AuthLayout({
               ].map(({ value, label }) => (
                 <div key={label}>
                   <p
-                    className="font-display leading-none"
+                    className="num-display leading-none"
                     style={{ fontSize: '2.25rem', color: '#F5C500' }}
                   >
                     {value}
