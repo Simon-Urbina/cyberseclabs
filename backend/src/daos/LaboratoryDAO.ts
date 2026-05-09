@@ -1,17 +1,44 @@
 import sql from '../db/index.js'
 import type { Laboratory } from '../types.js'
 
+export interface LaboratoryWithProgress extends Laboratory {
+  progress: {
+    status: 'not_started' | 'in_progress' | 'completed'
+    bestScorePercent: number
+    attemptsCount: number
+  } | null
+}
+
 export class LaboratoryDAO {
-  static async findByModuleId(moduleId: string, publishedOnly = true): Promise<Laboratory[]> {
-    if (publishedOnly) {
-      return sql<Laboratory[]>`
-        SELECT * FROM laboratories
-        WHERE module_id = ${moduleId} AND is_published = TRUE
-        ORDER BY position ASC
-      `
-    }
-    return sql<Laboratory[]>`
-      SELECT * FROM laboratories WHERE module_id = ${moduleId} ORDER BY position ASC
+  static async findByModuleId(
+    moduleId: string,
+    publishedOnly = true,
+    userId?: string,
+  ): Promise<LaboratoryWithProgress[]> {
+    return sql<LaboratoryWithProgress[]>`
+      SELECT
+        l.*,
+        ${userId
+          ? sql`
+            CASE WHEN ulp.id IS NOT NULL THEN
+              jsonb_build_object(
+                'status',           ulp.status,
+                'bestScorePercent', ulp.best_score_percent,
+                'attemptsCount',    ulp.attempts_count
+              )
+            ELSE NULL END
+          `
+          : sql`NULL`
+        } AS progress
+      FROM laboratories l
+      ${userId
+        ? sql`LEFT JOIN user_laboratory_progress ulp
+                ON ulp.laboratory_id = l.id AND ulp.user_id = ${userId}`
+        : sql``
+      }
+      WHERE l.module_id = ${moduleId}
+        ${publishedOnly ? sql`AND l.is_published = TRUE` : sql``}
+      ORDER BY l.position ASC
     `
   }
 

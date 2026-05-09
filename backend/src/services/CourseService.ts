@@ -40,13 +40,13 @@ export class CourseService {
     return CourseModuleDAO.findByCourseId(course.id)
   }
 
-  static async getLaboratories(courseSlug: string, moduleSlug: string, role?: UserRole) {
+  static async getLaboratories(courseSlug: string, moduleSlug: string, userId?: string, role?: UserRole) {
     const course = await CourseDAO.findBySlug(courseSlug)
     if (!course || (!course.isPublished && role !== 'admin'))
       throw new HTTPError(404, 'Curso no encontrado.')
     const module = await CourseModuleDAO.findBySlug(course.id, moduleSlug)
     if (!module) throw new HTTPError(404, 'Módulo no encontrado.')
-    return LaboratoryDAO.findByModuleId(module.id, role !== 'admin')
+    return LaboratoryDAO.findByModuleId(module.id, role !== 'admin', userId)
   }
 
   static async getLaboratory(

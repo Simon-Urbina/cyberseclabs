@@ -27,7 +27,7 @@ export class CourseController {
   static async getLaboratories(c: Context) {
     const user = c.get('user') as TokenPayload | undefined
     const { slug, moduleSlug } = c.req.param()
-    return c.json(await CourseService.getLaboratories(slug, moduleSlug, user?.role))
+    return c.json(await CourseService.getLaboratories(slug, moduleSlug, user?.id, user?.role))
   }
 
   static async getLaboratory(c: Context) {

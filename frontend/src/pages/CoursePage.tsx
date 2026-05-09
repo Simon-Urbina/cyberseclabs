@@ -297,11 +297,12 @@ function ModuleSection({
       >
         {/* Watermark number */}
         <div
-          className="absolute right-5 top-1/2 -translate-y-1/2 font-display pointer-events-none select-none"
+          className="absolute right-5 top-1/2 -translate-y-1/2 font-numeric pointer-events-none select-none"
           style={{
             fontSize: 'clamp(4rem,10vw,6.5rem)',
             lineHeight: 1,
-            fontWeight: 800,
+            fontWeight: 700,
+            letterSpacing: '-0.02em',
             color: isDark ? 'rgba(26,63,150,0.06)' : 'rgba(26,63,150,0.04)',
           }}
         >
@@ -312,16 +313,16 @@ function ModuleSection({
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <p
-                className="font-mono text-[9px] tracking-[0.28em] uppercase mb-2.5"
+                className="font-mono text-[12px] tracking-[0.22em] uppercase mb-3"
                 style={{ color: diff.color }}
               >
                 // módulo {String(modIdx + 1).padStart(2, '0')}
               </p>
               <h2
-                className="font-display mb-1.5"
+                className="font-display mb-2"
                 style={{
-                  fontSize: 'clamp(1.2rem,2.2vw,1.6rem)',
-                  lineHeight: 1.2,
+                  fontSize: 'clamp(1.5rem,2.5vw,2.2rem)',
+                  lineHeight: 1.15,
                   color: isDark ? '#C8D5EE' : '#0A1545',
                 }}
               >
@@ -411,32 +412,48 @@ function LabPath({ labs, course, isDark, onLabClick }: {
 
 // ─── Lab row ──────────────────────────────────────────────────────────────────
 
-const STATUS_STYLES: Record<LabStatus, { bg: string; border: string; fg: string; glow: string; darkBg: string; darkBorder: string; darkFg: string }> = {
-  completed:  { bg: 'rgba(82,173,112,0.10)',  border: 'rgba(82,173,112,0.50)',  fg: '#52ad70', glow: 'rgba(82,173,112,0.22)', darkBg: 'rgba(82,173,112,0.10)',  darkBorder: 'rgba(82,173,112,0.50)',  darkFg: '#52ad70' },
-  in_progress:{ bg: 'rgba(37,150,190,0.12)',  border: '#2596be',               fg: '#2596be', glow: 'rgba(37,150,190,0.28)', darkBg: 'rgba(37,150,190,0.15)',  darkBorder: '#2596be',               darkFg: '#3DAED0' },
-  available:  { bg: 'rgba(26,63,150,0.07)',   border: 'rgba(26,63,150,0.40)',  fg: '#1A3F96', glow: 'none',                  darkBg: 'rgba(26,63,150,0.12)',   darkBorder: 'rgba(26,63,150,0.50)',  darkFg: '#7B9FE8' },
-  locked:     { bg: 'rgba(26,63,150,0.03)',   border: 'rgba(26,63,150,0.10)',  fg: '#9BADD0', glow: 'none',                  darkBg: 'rgba(26,63,150,0.04)',   darkBorder: 'rgba(26,63,150,0.14)',  darkFg: '#3A5AB8' },
+interface StatusStyle {
+  lightBg: string; darkBg: string
+  lightBorder: string; darkBorder: string
+  lightFg: string; darkFg: string
+  glow: string
+}
+
+const STATUS_STYLES: Record<LabStatus, StatusStyle> = {
+  completed:  { lightBg: '#EEF8F2', darkBg: '#091C10',  lightBorder: 'rgba(82,173,112,0.55)',  darkBorder: 'rgba(82,173,112,0.60)',  lightFg: '#316843', darkFg: '#52ad70', glow: 'rgba(82,173,112,0.28)' },
+  in_progress:{ lightBg: '#EAF5FA', darkBg: '#07151F',  lightBorder: '#2596be',                darkBorder: '#2596be',                lightFg: '#1E7DA0', darkFg: '#3DAED0', glow: 'rgba(37,150,190,0.32)' },
+  available:  { lightBg: '#EEF3FC', darkBg: '#0D1A3D',  lightBorder: 'rgba(26,63,150,0.45)',   darkBorder: 'rgba(26,63,150,0.60)',   lightFg: '#1A3F96', darkFg: '#7B9FE8', glow: 'none' },
+  locked:     { lightBg: '#F5F7FE', darkBg: '#080D1C',  lightBorder: 'rgba(26,63,150,0.14)',   darkBorder: 'rgba(26,63,150,0.18)',   lightFg: '#9BADD0', darkFg: '#3A5AB8', glow: 'none' },
 }
 
 function LabRow({ lab, status, isLeft, isDark, onClick }: {
-  lab: Lab
-  status: LabStatus
-  isLeft: boolean
-  isDark: boolean
-  onClick: () => void
+  lab: Lab; status: LabStatus; isLeft: boolean; isDark: boolean; onClick: () => void
 }) {
+  const [hovered, setHovered] = useState(false)
+
   const st       = STATUS_STYLES[status]
-  const bg       = isDark ? st.darkBg     : st.bg
-  const border   = isDark ? st.darkBorder : st.border
-  const fg       = isDark ? st.darkFg     : st.fg
+  const bg       = isDark ? st.darkBg     : st.lightBg
+  const border   = isDark ? st.darkBorder : st.lightBorder
+  const fg       = isDark ? st.darkFg     : st.lightFg
   const clickable = status !== 'locked'
 
+  const nodeShadow = hovered && clickable
+    ? `0 0 28px ${st.glow !== 'none' ? st.glow : `${border}66`}, 0 6px 24px rgba(0,0,0,0.3)`
+    : st.glow !== 'none' ? `0 0 18px ${st.glow}, 0 0 36px ${st.glow}44` : 'none'
+
   return (
-    <div className="relative grid items-center" style={{ gridTemplateColumns: '1fr 80px 1fr', gap: '0 24px', minHeight: '96px' }}>
+    <div
+      className="relative grid items-center"
+      style={{ gridTemplateColumns: '1fr 80px 1fr', gap: '0 24px', minHeight: '96px' }}
+    >
       {/* Left info */}
       <div className="flex justify-end">
         {!isLeft && (
-          <LabCard lab={lab} status={status} fg={fg} isDark={isDark} clickable={clickable} onClick={onClick} />
+          <LabCard
+            lab={lab} status={status} fg={fg} isDark={isDark}
+            clickable={clickable} hovered={hovered}
+            onHover={setHovered} onClick={onClick}
+          />
         )}
       </div>
 
@@ -445,29 +462,19 @@ function LabRow({ lab, status, isLeft, isDark, onClick }: {
         <button
           disabled={!clickable}
           onClick={clickable ? onClick : undefined}
+          onMouseEnter={() => { if (clickable) setHovered(true)  }}
+          onMouseLeave={() => setHovered(false)}
           className="relative flex items-center justify-center rounded-full transition-all duration-200"
           style={{
             width: 76, height: 76,
             background: bg,
             border: `2px solid ${border}`,
-            boxShadow: st.glow !== 'none' ? `0 0 18px ${st.glow}, 0 0 36px ${st.glow}55` : 'none',
+            boxShadow: nodeShadow,
+            transform: hovered && clickable ? 'scale(1.1)' : 'scale(1)',
             cursor: clickable ? 'pointer' : 'default',
-          }}
-          onMouseEnter={e => {
-            if (!clickable) return
-            const el = e.currentTarget as HTMLElement
-            el.style.transform = 'scale(1.1)'
-            el.style.boxShadow = `0 0 28px ${st.glow !== 'none' ? st.glow : `${border}55`}, 0 6px 24px rgba(0,0,0,0.28)`
-          }}
-          onMouseLeave={e => {
-            const el = e.currentTarget as HTMLElement
-            el.style.transform = 'scale(1)'
-            el.style.boxShadow = st.glow !== 'none' ? `0 0 18px ${st.glow}, 0 0 36px ${st.glow}55` : 'none'
           }}
         >
           <NodeIcon status={status} color={fg} />
-
-          {/* Pulse ring for in_progress */}
           {status === 'in_progress' && (
             <span className="absolute inset-0 rounded-full animate-ping" style={{ border: `2px solid ${fg}55` }} />
           )}
@@ -477,9 +484,8 @@ function LabRow({ lab, status, isLeft, isDark, onClick }: {
         <span
           className="absolute -bottom-1 -right-1 flex items-center justify-center rounded-full num-display"
           style={{
-            width: 20, height: 20,
-            fontSize: '9px', lineHeight: 1,
-            background: isDark ? '#0A1545' : '#EEF3FC',
+            width: 20, height: 20, fontSize: '9px', lineHeight: 1,
+            background: isDark ? '#060D1F' : '#EEF3FC',
             border: `1px solid ${border}`,
             color: fg,
           }}
@@ -491,7 +497,11 @@ function LabRow({ lab, status, isLeft, isDark, onClick }: {
       {/* Right info */}
       <div className="flex justify-start">
         {isLeft && (
-          <LabCard lab={lab} status={status} fg={fg} isDark={isDark} clickable={clickable} onClick={onClick} />
+          <LabCard
+            lab={lab} status={status} fg={fg} isDark={isDark}
+            clickable={clickable} hovered={hovered}
+            onHover={setHovered} onClick={onClick}
+          />
         )}
       </div>
     </div>
@@ -500,12 +510,14 @@ function LabRow({ lab, status, isLeft, isDark, onClick }: {
 
 // ─── Lab card ─────────────────────────────────────────────────────────────────
 
-function LabCard({ lab, status, fg, isDark, clickable, onClick }: {
+function LabCard({ lab, status, fg, isDark, clickable, hovered, onHover, onClick }: {
   lab: Lab
   status: LabStatus
   fg: string
   isDark: boolean
   clickable: boolean
+  hovered: boolean
+  onHover: (v: boolean) => void
   onClick: () => void
 }) {
   const isCompleted  = status === 'completed'
@@ -513,10 +525,16 @@ function LabCard({ lab, status, fg, isDark, clickable, onClick }: {
   const isLocked     = status === 'locked'
 
   const borderColor = isCompleted
-    ? 'rgba(82,173,112,0.25)'
+    ? 'rgba(82,173,112,0.30)'
     : isInProgress
-    ? 'rgba(37,150,190,0.35)'
-    : isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.10)'
+    ? 'rgba(37,150,190,0.40)'
+    : isDark ? 'rgba(26,63,150,0.18)' : 'rgba(26,63,150,0.14)'
+
+  const activeBorder = isCompleted
+    ? 'rgba(82,173,112,0.65)'
+    : isInProgress
+    ? '#2596be'
+    : isDark ? 'rgba(26,63,150,0.65)' : 'rgba(26,63,150,0.55)'
 
   const statusLabel = isCompleted
     ? '✓ Completado'
@@ -530,48 +548,42 @@ function LabCard({ lab, status, fg, isDark, clickable, onClick }: {
     <button
       disabled={!clickable}
       onClick={clickable ? onClick : undefined}
-      className="text-left w-full max-w-[220px] rounded-xl p-4 transition-all duration-150"
+      onMouseEnter={() => { if (clickable) onHover(true)  }}
+      onMouseLeave={() => onHover(false)}
+      className="text-left w-full max-w-[250px] rounded-xl p-5"
       style={{
-        background: isDark ? 'rgba(13,27,70,0.80)' : '#f8faff',
-        border: `1px solid ${borderColor}`,
+        background: isDark ? 'rgba(13,27,70,0.90)' : '#f8faff',
+        border: `1px solid ${hovered && clickable ? activeBorder : borderColor}`,
         opacity: isLocked ? 0.45 : 1,
         cursor: clickable ? 'pointer' : 'default',
-      }}
-      onMouseEnter={e => {
-        if (!clickable) return
-        const el = e.currentTarget as HTMLElement
-        el.style.transform = 'scale(1.03)'
-        el.style.boxShadow = '0 4px 24px rgba(0,0,0,0.2)'
-      }}
-      onMouseLeave={e => {
-        const el = e.currentTarget as HTMLElement
-        el.style.transform = 'scale(1)'
-        el.style.boxShadow = 'none'
+        transform: hovered && clickable ? 'scale(1.03)' : 'scale(1)',
+        boxShadow: hovered && clickable ? '0 4px 24px rgba(0,0,0,0.22)' : 'none',
+        transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
       }}
     >
-      <p className="font-mono text-[9px] tracking-[0.2em] uppercase mb-1.5" style={{ color: fg }}>
+      <p className="font-mono text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: fg }}>
         {statusLabel}
       </p>
 
       <p
-        className="font-display leading-tight mb-3"
-        style={{ fontSize: '13px', color: isDark ? '#C8D5EE' : '#0A1545' }}
+        className="font-display leading-snug mb-3"
+        style={{ fontSize: '15px', color: isDark ? '#C8D5EE' : '#0A1545' }}
       >
         {lab.title}
       </p>
 
-      <div className="flex items-center gap-3">
-        <span className="flex items-center gap-1 font-mono text-[10px]" style={{ color: '#F5C500' }}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+      <div className="flex items-center gap-4">
+        <span className="flex items-center gap-1.5 font-mono text-[11px]" style={{ color: '#F5C500' }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
-          <span className="num-display" style={{ fontSize: '10px' }}>{lab.points}</span> pts
+          <span className="num-display" style={{ fontSize: '11px' }}>{lab.points}</span> pts
         </span>
-        <span className="flex items-center gap-1 font-mono text-[10px]" style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <span className="flex items-center gap-1.5 font-mono text-[11px]" style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
-          <span className="num-display" style={{ fontSize: '10px' }}>{lab.estimatedMinutes}</span>min
+          <span className="num-display" style={{ fontSize: '11px' }}>{lab.estimatedMinutes}</span> min
         </span>
       </div>
 
@@ -594,7 +606,7 @@ function LabCard({ lab, status, fg, isDark, clickable, onClick }: {
 // ─── Node icon ────────────────────────────────────────────────────────────────
 
 function NodeIcon({ status, color }: { status: LabStatus; color: string }) {
-  const s = { stroke: color, fill: 'none', strokeWidth: '2', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  const s = { stroke: color, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
 
   if (status === 'completed') return (
     <svg width="28" height="28" viewBox="0 0 24 24" {...s} strokeWidth="2.5">
@@ -608,15 +620,17 @@ function NodeIcon({ status, color }: { status: LabStatus; color: string }) {
     </svg>
   )
   if (status === 'in_progress') return (
-    <svg width="26" height="26" viewBox="0 0 24 24" {...s} strokeWidth="1.8">
-      <polyline points="4 17 10 11 4 5"/>
-      <line x1="12" y1="19" x2="20" y2="19"/>
+    /* >_ terminal prompt */
+    <svg width="28" height="28" viewBox="0 0 24 24" {...s} strokeWidth="2">
+      <polyline points="4 8 9 12 4 16"/>
+      <line x1="12" y1="16" x2="20" y2="16"/>
     </svg>
   )
-  // available
+  // available → </> code brackets
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" {...s} strokeWidth="1.8">
-      <polygon points="5 3 19 12 5 21 5 3" fill={`${color}20`}/>
+    <svg width="28" height="28" viewBox="0 0 24 24" {...s} strokeWidth="2">
+      <polyline points="16 18 22 12 16 6"/>
+      <polyline points="8 6 2 12 8 18"/>
     </svg>
   )
 }
