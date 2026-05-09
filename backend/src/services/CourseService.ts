@@ -18,8 +18,8 @@ export class CourseService {
     })
   }
 
-  static async getCourse(slug: string, role?: UserRole) {
-    const course = await CourseDAO.findBySlug(slug)
+  static async getCourse(slug: string, userId?: string, role?: UserRole) {
+    const course = await CourseDAO.findBySlugWithStats(slug, userId)
     if (!course || (!course.isPublished && role !== 'admin'))
       throw new HTTPError(404, 'Curso no encontrado.')
     return course

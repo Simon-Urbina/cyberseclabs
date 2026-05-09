@@ -10,7 +10,7 @@ export class CourseController {
 
   static async getCourse(c: Context) {
     const user = c.get('user') as TokenPayload | undefined
-    return c.json(await CourseService.getCourse(c.req.param('slug')!, user?.role))
+    return c.json(await CourseService.getCourse(c.req.param('slug')!, user?.id, user?.role))
   }
 
   static async enroll(c: Context) {

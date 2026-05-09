@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { api } from '../lib/api'
@@ -24,6 +25,7 @@ interface FullProfile {
 export default function DashboardPage() {
   const { user } = useAuth()
   const { theme } = useTheme()
+  const navigate  = useNavigate()
   const isDark = theme === 'dark'
 
   const [profile, setProfile] = useState<FullProfile | null>(null)
@@ -296,7 +298,12 @@ export default function DashboardPage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {enrolledCourses.map(course => (
-                    <CourseCard key={course.id} course={course} onEnroll={() => {}} />
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      onEnroll={() => {}}
+                      onContinue={c => navigate(`/courses/${c.slug}`)}
+                    />
                   ))}
                 </div>
               )}

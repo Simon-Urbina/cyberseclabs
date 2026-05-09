@@ -6,6 +6,7 @@ import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
+import CoursePage from './pages/CoursePage'
 import NotFoundPage from './pages/NotFoundPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -39,6 +40,13 @@ function AppShell() {
               <Header />
               <DashboardPage />
             </>
+          </PrivateRoute>
+        } />
+
+        {/* Course navigation */}
+        <Route path="/courses/:slug" element={
+          <PrivateRoute>
+            <CoursePage />
           </PrivateRoute>
         } />
 
