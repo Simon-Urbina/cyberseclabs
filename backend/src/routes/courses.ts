@@ -6,6 +6,7 @@ const router = new Hono()
 
 router.get('/', optionalAuth, CourseController.listCourses)
 router.get('/:slug', optionalAuth, CourseController.getCourse)
+router.get('/:slug/nav', CourseController.getCourseNav)
 router.post('/:slug/enroll', requireAuth, CourseController.enroll)
 router.get('/:slug/modules', CourseController.getModules)
 router.get('/:slug/modules/:moduleSlug/labs', optionalAuth, CourseController.getLaboratories)

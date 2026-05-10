@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { api } from '../lib/api'
@@ -48,6 +48,17 @@ interface QuestionState {
   isCorrect?: boolean
   correctOptionId?: string | null
   explanation?: string
+}
+
+interface CourseNav {
+  modules: { slug: string; labs: { slug: string; title: string }[] }[]
+}
+
+interface SubmissionHistory {
+  attemptNumber: number
+  scorePercent: number
+  correctAnswersCount: number
+  submittedAt: string
 }
 
 // ─── Markdown ─────────────────────────────────────────────────────────────────
@@ -220,9 +231,10 @@ function TerminalPanel({
 
       {/* Slide-in panel */}
       <div
-        className="fixed top-0 right-0 bottom-0 z-50 flex flex-col"
+        className="fixed top-0 right-0 z-50 flex flex-col"
         style={{
           width: 'min(580px, 100vw)',
+          height: '100dvh',
           background: 'linear-gradient(150deg, #040912 0%, #060d1a 100%)',
           borderLeft: `1px solid ${isDark ? 'rgba(0,200,100,0.10)' : 'rgba(0,200,100,0.14)'}`,
           boxShadow: '-20px 0 80px rgba(0,0,0,0.6)',
@@ -293,6 +305,7 @@ function TerminalPanel({
           <div
             ref={scrollRef}
             className="flex-1 overflow-y-auto px-5 py-4 font-mono text-[13px] leading-6 space-y-0.5"
+            style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
           >
             {history.map((line, i) => (
               <p key={i} style={{ color: lineColor[line.type], fontWeight: line.type === 'heading' ? 600 : 400 }}>
@@ -358,8 +371,13 @@ function TerminalPanel({
 
         {/* Taskbar */}
         <div
-          className="relative z-10 h-10 shrink-0 flex items-center px-4 gap-3"
-          style={{ background: 'rgba(4,8,16,0.9)', borderTop: '1px solid rgba(0,200,100,0.05)' }}
+          className="relative z-10 shrink-0 flex items-center px-4 gap-3"
+          style={{
+            background: 'rgba(4,8,16,0.9)',
+            borderTop: '1px solid rgba(0,200,100,0.05)',
+            height: 'calc(2.5rem + env(safe-area-inset-bottom, 0px))',
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          }}
         >
           <button className="w-7 h-7 rounded flex items-center justify-center transition-colors" style={{ color: '#1A3F96' }}
             onMouseEnter={e => (e.currentTarget.style.color = '#2596be')}
@@ -389,10 +407,12 @@ function TerminalPanel({
 // ─── Result modal ─────────────────────────────────────────────────────────────
 
 function ResultModal({
-  result, labPoints, isDark, onRetry, onDashboard,
+  result, isDark, onRetry, onDashboard, nextLab, onNext,
 }: {
-  result: SubmissionResult; labPoints: number; isDark: boolean
+  result: SubmissionResult; isDark: boolean
   onRetry: () => void; onDashboard: () => void
+  nextLab?: { title: string } | null
+  onNext?: () => void
 }) {
   const passed = result.scorePercent >= 60
   const accent = passed ? '#4ade80' : '#f87171'
@@ -447,25 +467,51 @@ function ResultModal({
 
         {/* Buttons */}
         <div className="flex flex-col gap-3">
-          <button
-            onClick={onDashboard}
-            className="btn-neon w-full py-3.5 rounded-xl text-[14px] font-semibold"
-          >
-            Volver al dashboard
-          </button>
-          <button
-            onClick={onRetry}
-            className="w-full py-3.5 rounded-xl text-[14px] font-mono transition-all"
-            style={{
-              color: isDark ? '#7B9FE8' : '#1A3F96',
-              border: '1px solid rgba(26,63,150,0.22)',
-              background: 'rgba(26,63,150,0.05)',
-            }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(26,63,150,0.12)'}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(26,63,150,0.05)'}
-          >
-            Intentar de nuevo
-          </button>
+          {passed && nextLab && onNext ? (
+            <button
+              onClick={onNext}
+              className="btn-neon w-full py-3.5 rounded-xl text-[14px] font-semibold"
+            >
+              Siguiente lab →
+            </button>
+          ) : (
+            <button
+              onClick={onDashboard}
+              className="btn-neon w-full py-3.5 rounded-xl text-[14px] font-semibold"
+            >
+              Volver al dashboard
+            </button>
+          )}
+          {passed && nextLab && (
+            <button
+              onClick={onDashboard}
+              className="w-full py-3.5 rounded-xl text-[14px] font-mono transition-all"
+              style={{
+                color: isDark ? '#7B9FE8' : '#1A3F96',
+                border: '1px solid rgba(26,63,150,0.22)',
+                background: 'rgba(26,63,150,0.05)',
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(26,63,150,0.12)'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(26,63,150,0.05)'}
+            >
+              Ir al dashboard
+            </button>
+          )}
+          {!passed && (
+            <button
+              onClick={onRetry}
+              className="w-full py-3.5 rounded-xl text-[14px] font-mono transition-all"
+              style={{
+                color: isDark ? '#7B9FE8' : '#1A3F96',
+                border: '1px solid rgba(26,63,150,0.22)',
+                background: 'rgba(26,63,150,0.05)',
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(26,63,150,0.12)'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(26,63,150,0.05)'}
+            >
+              Intentar de nuevo
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -738,6 +784,10 @@ export default function LabPage() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [result, setResult] = useState<SubmissionResult | null>(null)
 
+  const [courseNav, setCourseNav] = useState<CourseNav | null>(null)
+  const [attemptHistory, setAttemptHistory] = useState<SubmissionHistory[]>([])
+  const [historyOpen, setHistoryOpen] = useState(false)
+
   // Load lab
   useEffect(() => {
     if (!slug || !moduleSlug || !labSlug) return
@@ -757,6 +807,25 @@ export default function LabPage() {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }, [slug, moduleSlug, labSlug])
+
+  // Fetch course navigation for next-lab computation
+  useEffect(() => {
+    if (!slug) return
+    api.get<CourseNav>(`/api/courses/${slug}/nav`).then(setCourseNav).catch(() => {})
+  }, [slug])
+
+  // Fetch attempt history once lab data is loaded
+  useEffect(() => {
+    if (!data) return
+    api.get<SubmissionHistory[]>(`/api/labs/${data.lab.id}/submissions`).then(setAttemptHistory).catch(() => {})
+  }, [data?.lab.id])
+
+  const nextLab = useMemo(() => {
+    if (!courseNav || !moduleSlug || !labSlug) return null
+    const flat = courseNav.modules.flatMap(m => m.labs.map(l => ({ moduleSlug: m.slug, ...l })))
+    const idx = flat.findIndex(l => l.moduleSlug === moduleSlug && l.slug === labSlug)
+    return idx >= 0 && idx + 1 < flat.length ? flat[idx + 1] : null
+  }, [courseNav, moduleSlug, labSlug])
 
   // Open next question (keeps current open)
   const advanceAfter = (currentIndex: number, delay: number) => {
@@ -841,6 +910,11 @@ export default function LabPage() {
     setQuestionStates({})
     setOpenQuestions(new Set([0]))
     setSubmitError(null)
+  }
+
+  const handleNext = () => {
+    if (!nextLab) return
+    navigate(`/courses/${slug}/${nextLab.moduleSlug}/${nextLab.slug}`)
   }
 
   const answeredCount = data
@@ -954,6 +1028,76 @@ export default function LabPage() {
           </div>
         </div>
 
+        {/* Attempt history */}
+        {attemptHistory.length > 0 && (
+          <div className="animate-fade-up-3">
+            <button
+              onClick={() => setHistoryOpen(h => !h)}
+              className="w-full flex items-center justify-between px-5 py-3.5 rounded-xl transition-all"
+              style={{
+                background: isDark ? 'rgba(13,27,70,0.55)' : '#f8faff',
+                border: `1px solid ${isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.12)'}`,
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#3A5AB8' : '#1A3F96'} strokeWidth="2" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span className="font-mono text-[11px] tracking-[0.18em] uppercase" style={{ color: isDark ? '#7B9FE8' : '#1A3F96' }}>
+                  Intentos anteriores
+                </span>
+                <span
+                  className="font-mono text-[10px] px-2 py-0.5 rounded"
+                  style={{ background: isDark ? 'rgba(26,63,150,0.18)' : 'rgba(26,63,150,0.10)', color: isDark ? '#7B9FE8' : '#1A3F96' }}
+                >
+                  {attemptHistory.length}
+                </span>
+              </div>
+              <svg
+                width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke={isDark ? '#3A5AB8' : '#4A70CC'} strokeWidth="2" strokeLinecap="round"
+                style={{ transform: historyOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+              >
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+
+            {historyOpen && (
+              <div className="mt-2 space-y-2">
+                {attemptHistory.map(h => {
+                  const ok = h.scorePercent >= 60
+                  return (
+                    <div
+                      key={h.attemptNumber}
+                      className="flex items-center gap-4 px-5 py-3 rounded-xl"
+                      style={{
+                        background: isDark ? 'rgba(13,27,70,0.35)' : 'rgba(248,250,255,0.8)',
+                        border: `1px solid ${isDark ? 'rgba(26,63,150,0.10)' : 'rgba(26,63,150,0.09)'}`,
+                      }}
+                    >
+                      <span className="font-mono text-[11px] shrink-0" style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}>
+                        #{h.attemptNumber}
+                      </span>
+                      <div
+                        className="font-mono text-[13px] font-semibold"
+                        style={{ color: ok ? '#4ade80' : '#f87171', minWidth: '3.5rem' }}
+                      >
+                        {Math.round(h.scorePercent)}%
+                      </div>
+                      <span className="text-[12px]" style={{ color: isDark ? '#4A70CC' : '#2451C8' }}>
+                        {h.correctAnswersCount} correctas
+                      </span>
+                      <span className="ml-auto font-mono text-[11px]" style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}>
+                        {new Date(h.submittedAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Questions */}
         <section className="space-y-3 animate-fade-up-3">
           {data.questions.map((q, i) => (
@@ -1023,10 +1167,11 @@ export default function LabPage() {
       {result && (
         <ResultModal
           result={result}
-          labPoints={data.lab.points}
           isDark={isDark}
           onRetry={handleRetry}
           onDashboard={() => navigate('/dashboard')}
+          nextLab={nextLab}
+          onNext={handleNext}
         />
       )}
     </div>

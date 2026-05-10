@@ -98,6 +98,16 @@ export class SubmissionService {
     }
   }
 
+  static async getHistory(userId: string, laboratoryId: string) {
+    const submissions = await SubmissionDAO.findByUserAndLab(userId, laboratoryId)
+    return submissions.map(s => ({
+      attemptNumber: s.attemptNumber,
+      scorePercent: s.scorePercent,
+      correctAnswersCount: s.correctAnswersCount,
+      submittedAt: s.submittedAt,
+    }))
+  }
+
   static async checkAnswer(
     labId: string,
     questionId: string,

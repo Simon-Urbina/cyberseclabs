@@ -13,6 +13,13 @@ export class SubmissionController {
     return c.json(result, 201)
   }
 
+  static async getHistory(c: Context) {
+    const user = c.get('user') as TokenPayload
+    const { labId } = c.req.param()
+    const submissions = await SubmissionService.getHistory(user.id, labId)
+    return c.json(submissions)
+  }
+
   static async checkAnswer(c: Context) {
     const { labId } = c.req.param()
     const body = await c.req.json<{ questionId: string; selectedOptionId: string }>()

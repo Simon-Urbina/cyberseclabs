@@ -461,7 +461,10 @@ export default function DashboardPage() {
                   Top 5 del ranking
                 </h3>
               </div>
-              <Ranking limit={5} />
+              <Ranking
+                limit={5}
+                selfProfile={profile ? { username: profile.username, rank: profile.rank, points: profile.points, bio: profile.bio } : null}
+              />
             </div>
           </section>
         </div>

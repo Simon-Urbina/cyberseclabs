@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+import { api } from '../lib/api'
 import Header from '../components/Header'
 import Ranking from '../components/Ranking'
 import Footer from '../components/Footer'
@@ -44,16 +46,16 @@ const FEATURES = [
   },
 ]
 
-const STATS = [
-  { value: '3', label: 'Cursos' },
-  { value: '12+', label: 'Laboratorios' },
-  { value: '1K+', label: 'Puntos disponibles' },
-]
-
 export default function LandingPage() {
   const { theme } = useTheme()
   const { token } = useAuth()
   const isDark = theme === 'dark'
+
+  const [stats, setStats] = useState<{ courseCount: number; labCount: number; totalPoints: number; userCount: number } | null>(null)
+  useEffect(() => {
+    api.get<{ courseCount: number; labCount: number; totalPoints: number; userCount: number }>('/api/stats')
+      .then(setStats).catch(() => {})
+  }, [])
 
   return (
     <div style={{ background: isDark ? '#060D1F' : '#EEF3FC' }}>
@@ -175,18 +177,17 @@ export default function LandingPage() {
 
             {/* Stats */}
             <div className="flex flex-wrap gap-12 mt-20 animate-fade-up-5">
-              {STATS.map(({ value, label }) => (
+              {[
+                { value: stats ? String(stats.courseCount) : '—', label: 'Cursos' },
+                { value: stats ? String(stats.labCount) : '—', label: 'Laboratorios' },
+                { value: stats ? `${stats.totalPoints.toLocaleString('es-CO')}` : '—', label: 'Puntos disponibles' },
+                { value: stats ? String(stats.userCount) : '—', label: 'Usuarios' },
+              ].map(({ value, label }) => (
                 <div key={label}>
-                  <p
-                    className="num-display leading-none"
-                    style={{ fontSize: '2.75rem', color: '#F5C500' }}
-                  >
+                  <p className="num-display leading-none" style={{ fontSize: '2.75rem', color: '#F5C500' }}>
                     {value}
                   </p>
-                  <p
-                    className="font-mono text-[10px] tracking-[0.22em] uppercase mt-2"
-                    style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
-                  >
+                  <p className="font-mono text-[10px] tracking-[0.22em] uppercase mt-2" style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}>
                     {label}
                   </p>
                 </div>

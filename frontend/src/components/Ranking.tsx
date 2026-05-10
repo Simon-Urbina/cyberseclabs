@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
 
 interface RankRow {
   rank: number
@@ -16,14 +17,22 @@ interface RankingResponse {
   total: number
 }
 
+interface SelfProfile {
+  username: string
+  rank: number | null
+  points: number
+  bio: string | null
+}
+
 const RANK_ACCENTS: Record<number, { color: string; label: string }> = {
   1: { color: '#F5C500', label: 'GOLD' },
   2: { color: '#7B9FE8', label: 'SILVER' },
   3: { color: '#CD7F32', label: 'BRONZE' },
 }
 
-export default function Ranking({ limit = 5 }: { limit?: number }) {
+export default function Ranking({ limit = 5, selfProfile }: { limit?: number; selfProfile?: SelfProfile | null }) {
   const { theme } = useTheme()
+  const { user } = useAuth()
   const isDark = theme === 'dark'
   const [rows, setRows] = useState<RankRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,6 +48,8 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
   }, [limit])
 
   const maxPoints = rows.length ? Math.max(...rows.map(r => r.points), 1) : 1
+  const selfInList = user ? rows.some(r => r.username === user.username) : true
+  const showSelf = !selfInList && !!selfProfile && selfProfile.rank !== null
 
   return (
     <div className="space-y-3">
@@ -147,7 +158,7 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
 
               {/* User info */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <p
                     className="font-display truncate"
                     style={{
@@ -160,13 +171,17 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
                   {label && (
                     <span
                       className="font-mono text-[9px] tracking-[0.18em] px-1.5 py-0.5 rounded"
-                      style={{
-                        color: accent,
-                        background: `${accent}15`,
-                        border: `1px solid ${accent}30`,
-                      }}
+                      style={{ color: accent, background: `${accent}15`, border: `1px solid ${accent}30` }}
                     >
                       {label}
+                    </span>
+                  )}
+                  {user?.username === row.username && (
+                    <span
+                      className="font-mono text-[9px] tracking-[0.18em] px-1.5 py-0.5 rounded"
+                      style={{ color: '#2596be', background: 'rgba(37,150,190,0.12)', border: '1px solid rgba(37,150,190,0.30)' }}
+                    >
+                      TÚ
                     </span>
                   )}
                 </div>
@@ -212,6 +227,58 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
           </Link>
         )
       })}
+
+      {/* Your position — shown when you're outside the top N */}
+      {showSelf && selfProfile && (
+        <>
+          <div className="flex items-center gap-3 py-1">
+            <div className="flex-1 h-px" style={{ background: isDark ? 'rgba(26,63,150,0.15)' : 'rgba(26,63,150,0.10)' }} />
+            <span className="font-mono text-[9px] tracking-[0.18em]" style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}>···</span>
+            <div className="flex-1 h-px" style={{ background: isDark ? 'rgba(26,63,150,0.15)' : 'rgba(26,63,150,0.10)' }} />
+          </div>
+          <Link
+            to={`/u/${selfProfile.username}`}
+            className="block rounded-2xl px-6 py-5 transition-all duration-200 relative overflow-hidden"
+            style={{
+              background: isDark ? 'rgba(37,150,190,0.07)' : 'rgba(37,150,190,0.04)',
+              border: '1px solid rgba(37,150,190,0.22)',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'}
+          >
+            <div className="flex items-center gap-5">
+              <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center num-display"
+                style={{ fontSize: '1.5rem', background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.04)', color: '#2596be', border: '1px solid rgba(37,150,190,0.3)' }}>
+                {selfProfile.rank}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="font-display truncate" style={{ fontSize: '1.15rem', color: isDark ? '#C8D5EE' : '#0A1545' }}>
+                    {selfProfile.username}
+                  </p>
+                  <span className="font-mono text-[9px] tracking-[0.18em] px-1.5 py-0.5 rounded"
+                    style={{ color: '#2596be', background: 'rgba(37,150,190,0.12)', border: '1px solid rgba(37,150,190,0.30)' }}>
+                    TÚ
+                  </span>
+                </div>
+                {selfProfile.bio && (
+                  <p className="text-xs truncate" style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}>{selfProfile.bio}</p>
+                )}
+                <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(26,63,150,0.10)' : 'rgba(26,63,150,0.08)' }}>
+                  <div className="h-full rounded-full" style={{ width: `${Math.max((selfProfile.points / maxPoints) * 100, 2)}%`, background: 'linear-gradient(90deg, #2596be, #2596bedd)' }} />
+                </div>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="num-display leading-none" style={{ fontSize: '1.5rem', color: isDark ? '#C8D5EE' : '#0A1545' }}>
+                  {selfProfile.points.toLocaleString('es-CO')}
+                </p>
+                <p className="font-mono text-[10px] tracking-[0.18em] uppercase mt-1" style={{ color: '#2596be' }}>pts</p>
+              </div>
+            </div>
+          </Link>
+        </>
+      )}
     </div>
   )
 }

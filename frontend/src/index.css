@@ -364,7 +364,8 @@ html.dark .lab-prose .md-table td {
   background: transparent;
   border: none;
   border-bottom: 1.5px solid rgba(37, 150, 190, 0.25);
-  padding: 0.6rem 0 0.5rem;
+  padding-top: 0.6rem;
+  padding-bottom: 0.5rem;
   font-family: 'DM Sans', sans-serif;
   font-size: 0.95rem;
   outline: none;

@@ -12,6 +12,8 @@ function InputField({
   onChange: (v: string) => void; placeholder: string; isDark: boolean
 }) {
   const [focused, setFocused] = useState(false)
+  const [show, setShow] = useState(false)
+  const isPassword = type === 'password'
   return (
     <div className="space-y-2">
       <label
@@ -20,26 +22,49 @@ function InputField({
       >
         {label}
       </label>
-      <input
-        type={type}
-        required
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        placeholder={placeholder}
-        className="input-terminal w-full text-[15px] px-4 py-3"
-        style={{
-          color: isDark ? '#C8D5EE' : '#0A1545',
-          border: `1px solid ${
-            focused
-              ? '#2596be'
-              : isDark ? 'rgba(26,63,150,0.30)' : 'rgba(26,63,150,0.35)'
-          }`,
-          borderRadius: '10px',
-          transition: 'border-color 0.2s ease',
-        }}
-      />
+      <div className="relative">
+        <input
+          type={isPassword ? (show ? 'text' : 'password') : type}
+          required
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder={placeholder}
+          className="input-terminal w-full text-[15px] px-5 py-3.5"
+          style={{
+            color: isDark ? '#C8D5EE' : '#0A1545',
+            border: `1px solid ${focused ? '#2596be' : isDark ? 'rgba(26,63,150,0.30)' : 'rgba(26,63,150,0.35)'}`,
+            borderRadius: '10px',
+            transition: 'border-color 0.2s ease',
+            paddingRight: isPassword ? '2.75rem' : undefined,
+          }}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShow(s => !s)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity"
+            style={{ color: isDark ? '#3A5AB8' : '#4A70CC', opacity: 0.7 }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}
+            tabIndex={-1}
+          >
+            {show ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            )}
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -115,13 +140,24 @@ export default function LoginPage() {
           placeholder="operador@example.com"
           isDark={isDark}
         />
-        <InputField
-          label="Contraseña" type="password"
-          value={form.password}
-          onChange={v => setForm(f => ({ ...f, password: v }))}
-          placeholder="••••••••••"
-          isDark={isDark}
-        />
+        <div className="space-y-1">
+          <InputField
+            label="Contraseña" type="password"
+            value={form.password}
+            onChange={v => setForm(f => ({ ...f, password: v }))}
+            placeholder="••••••••••"
+            isDark={isDark}
+          />
+          <div className="flex justify-end">
+            <Link
+              to="/forgot-password"
+              className="font-mono text-[10px] tracking-[0.12em] transition-colors hover:underline"
+              style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
+        </div>
 
         {error && (
           <div

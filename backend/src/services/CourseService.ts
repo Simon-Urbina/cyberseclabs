@@ -25,6 +25,19 @@ export class CourseService {
     return course
   }
 
+  static async getCourseNav(courseSlug: string) {
+    const course = await CourseDAO.findBySlug(courseSlug)
+    if (!course || !course.isPublished) throw new HTTPError(404, 'Curso no encontrado.')
+    const modules = await CourseModuleDAO.findByCourseId(course.id)
+    const modulesWithLabs = await Promise.all(
+      modules.map(async m => {
+        const labs = await LaboratoryDAO.findByModuleId(m.id, true)
+        return { slug: m.slug, labs: labs.map(l => ({ slug: l.slug, title: l.title })) }
+      })
+    )
+    return { modules: modulesWithLabs }
+  }
+
   static async enrollUser(userId: string, courseSlug: string): Promise<CourseEnrollment> {
     const course = await CourseDAO.findBySlug(courseSlug)
     if (!course || !course.isPublished) throw new HTTPError(404, 'Curso no encontrado.')

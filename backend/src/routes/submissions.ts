@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/auth.js'
 
 const router = new Hono()
 
+router.get('/labs/:labId/submissions', requireAuth, SubmissionController.getHistory)
 router.post('/labs/:labId/submit', requireAuth, SubmissionController.submit)
 router.post('/labs/:labId/check', requireAuth, SubmissionController.checkAnswer)
 

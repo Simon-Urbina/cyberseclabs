@@ -5,10 +5,13 @@ import Header from './components/Header'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import CoursePage from './pages/CoursePage'
 import LabPage from './pages/LabPage'
 import PublicProfilePage from './pages/PublicProfilePage'
+import AboutPage from './pages/AboutPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -34,6 +37,8 @@ function AppShell() {
         {/* Auth pages — own layout, no header */}
         <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* App pages — header + content */}
         <Route path="/dashboard" element={
@@ -61,6 +66,9 @@ function AppShell() {
 
         {/* Public user profiles */}
         <Route path="/u/:username" element={<PublicProfilePage />} />
+
+        {/* About page */}
+        <Route path="/about" element={<AboutPage />} />
 
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />

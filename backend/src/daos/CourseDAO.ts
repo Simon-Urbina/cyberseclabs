@@ -130,6 +130,17 @@ export class CourseDAO {
     return row
   }
 
+  static async getPlatformStats(): Promise<{ courseCount: number; labCount: number; totalPoints: number; userCount: number }> {
+    const [row] = await sql<[{ courseCount: number; labCount: number; totalPoints: number; userCount: number }]>`
+      SELECT
+        (SELECT COUNT(*)                      FROM courses     WHERE is_published = TRUE)::int                   AS course_count,
+        (SELECT COUNT(*)                      FROM laboratories WHERE is_published = TRUE)::int                  AS lab_count,
+        (SELECT COALESCE(SUM(points), 0)      FROM laboratories WHERE is_published = TRUE)::int                 AS total_points,
+        (SELECT COUNT(*)                      FROM users        WHERE deleted_at IS NULL)::int                  AS user_count
+    `
+    return row
+  }
+
   static async update(
     id: string,
     data: Partial<Pick<Course, 'slug' | 'title' | 'description' | 'difficulty' | 'isPublished'>>,
