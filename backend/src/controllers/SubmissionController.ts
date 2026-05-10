@@ -12,4 +12,10 @@ export class SubmissionController {
     const result = await SubmissionService.submit(user.id, labId, body.answers)
     return c.json(result, 201)
   }
+
+  static async checkAnswer(c: Context) {
+    const { labId } = c.req.param()
+    const body = await c.req.json<{ questionId: string; selectedOptionId: string }>()
+    return c.json(await SubmissionService.checkAnswer(labId, body.questionId, body.selectedOptionId))
+  }
 }

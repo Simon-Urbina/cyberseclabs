@@ -20,33 +20,26 @@ function InputField({
       >
         {label}
       </label>
-      <div className="relative">
-        <input
-          type={type}
-          required
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          placeholder={placeholder}
-          className="input-terminal w-full text-[15px]"
-          style={{
-            color: isDark ? '#C8D5EE' : '#0A1545',
-            borderBottomColor: focused
-              ? 'transparent'
-              : isDark ? 'rgba(26,63,150,0.22)' : 'rgba(26,63,150,0.30)',
-          }}
-        />
-        <div
-          className="absolute bottom-0 left-0 transition-all duration-300"
-          style={{
-            height: '1.5px',
-            width: focused ? '100%' : '0%',
-            background: 'linear-gradient(90deg, #1A3F96, #2596be)',
-            marginBottom: '-1px',
-          }}
-        />
-      </div>
+      <input
+        type={type}
+        required
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        placeholder={placeholder}
+        className="input-terminal w-full text-[15px] px-4 py-3"
+        style={{
+          color: isDark ? '#C8D5EE' : '#0A1545',
+          border: `1px solid ${
+            focused
+              ? '#2596be'
+              : isDark ? 'rgba(26,63,150,0.30)' : 'rgba(26,63,150,0.35)'
+          }`,
+          borderRadius: '10px',
+          transition: 'border-color 0.2s ease',
+        }}
+      />
     </div>
   )
 }
@@ -107,7 +100,7 @@ export default function LoginPage() {
           <Link
             to="/register"
             className="font-semibold transition-colors hover:underline"
-            style={{ color: '#1A3F96' }}
+            style={{ color: isDark ? '#F5C500' : '#1A3F96' }}
           >
             Crea tu cuenta →
           </Link>

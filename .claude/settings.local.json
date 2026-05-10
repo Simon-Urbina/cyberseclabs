@@ -46,7 +46,10 @@
       "Bash(git diff *)",
       "Read(//tmp/**)",
       "Bash(grep -iE \"color.*#[0-9a-f]{3,6}\")",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\simon\\\\OneDrive\\\\Documents\\\\Santoto\\\\2026-1\\\\Semillero\\\\cybersec-labs\" -Recurse -Filter \"*.sql\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\simon\\\\OneDrive\\\\Documents\\\\Santoto\\\\2026-1\\\\Semillero\\\\cybersec-labs\\\\frontend\\\\src\" -Recurse -File)",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   }
 }

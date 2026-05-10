@@ -3,6 +3,7 @@ import { LaboratoryQuestionDAO } from '../daos/LaboratoryQuestionDAO.js'
 import { LaboratoryQuestionOptionDAO } from '../daos/LaboratoryQuestionOptionDAO.js'
 import { QuestionActivityDAO } from '../daos/QuestionActivityDAO.js'
 import { UserActivityProgressDAO } from '../daos/UserActivityProgressDAO.js'
+import { UserLaboratoryProgressDAO } from '../daos/UserLaboratoryProgressDAO.js'
 import { SubmissionDAO } from '../daos/SubmissionDAO.js'
 import { CourseEnrollmentDAO } from '../daos/CourseEnrollmentDAO.js'
 import { CourseModuleDAO } from '../daos/CourseModuleDAO.js'
@@ -69,6 +70,10 @@ export class SubmissionService {
     )
     const attemptNumber = await SubmissionDAO.getNextAttemptNumber(userId, laboratoryId)
 
+    // Check previous completion status before inserting (to detect first-time completion)
+    const prevProgress = await UserLaboratoryProgressDAO.find(userId, laboratoryId)
+    const wasAlreadyCompleted = prevProgress?.status === 'completed'
+
     // Insert → DB trigger updates user_laboratory_progress and awards points on first completion
     const submission = await SubmissionDAO.create({
       userId,
@@ -80,12 +85,36 @@ export class SubmissionService {
       scorePercent,
     })
 
+    const passed = scorePercent >= 60
+    const pointsEarned = passed && !wasAlreadyCompleted ? lab.points : 0
+
     return {
       submissionId: submission.id,
       attemptNumber,
       correctAnswersCount: correctCount,
       totalQuestions: lab.quizQuestionsRequired,
       scorePercent,
+      pointsEarned,
+    }
+  }
+
+  static async checkAnswer(
+    labId: string,
+    questionId: string,
+    selectedOptionId: string,
+  ) {
+    const question = await LaboratoryQuestionDAO.findById(questionId)
+    if (!question || question.laboratoryId !== labId || question.questionType !== 'multiple_choice')
+      throw new HTTPError(400, 'Pregunta no válida.')
+
+    const options = await LaboratoryQuestionOptionDAO.findByQuestionId(questionId)
+    const selected = options.find(o => o.id === selectedOptionId)
+    const correct = options.find(o => o.isCorrect)
+
+    return {
+      isCorrect: selected?.isCorrect ?? false,
+      correctOptionId: correct?.id ?? null,
+      explanation: question.explanation,
     }
   }
 }

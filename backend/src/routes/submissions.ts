@@ -5,5 +5,6 @@ import { requireAuth } from '../middleware/auth.js'
 const router = new Hono()
 
 router.post('/labs/:labId/submit', requireAuth, SubmissionController.submit)
+router.post('/labs/:labId/check', requireAuth, SubmissionController.checkAnswer)
 
 export default router

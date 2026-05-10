@@ -33,8 +33,8 @@ export default function Header() {
         <div className="flex items-center justify-between h-[76px]">
 
           {/* Logo */}
-          <Link 
-            to={user ? '/dashboard' : '/login'} 
+          <Link
+            to="/"
             className="shrink-0 transition-transform duration-300 hover:scale-105 active:scale-95"
           >
             <LogoWordmark isDark={isDark} />

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useTheme } from '../context/ThemeContext'
 
@@ -94,12 +95,14 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
         const ratio = row.points > 0 ? row.points / maxPoints : 0
 
         return (
-          <div
+          <Link
             key={row.id}
-            className="rounded-2xl px-6 py-5 transition-all duration-200 cursor-default relative overflow-hidden"
+            to={`/u/${row.username}`}
+            className="block rounded-2xl px-6 py-5 transition-all duration-200 relative overflow-hidden"
             style={{
               background: isDark ? 'rgba(13,27,70,0.85)' : '#f8faff',
               border: `1px solid ${isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.10)'}`,
+              textDecoration: 'none',
               ...(isTop && {
                 boxShadow: isDark
                   ? '0 0 0 1px rgba(245,197,0,0.18), 0 8px 32px rgba(245,197,0,0.05)'
@@ -206,7 +209,7 @@ export default function Ranking({ limit = 5 }: { limit?: number }) {
                 </p>
               </div>
             </div>
-          </div>
+          </Link>
         )
       })}
     </div>

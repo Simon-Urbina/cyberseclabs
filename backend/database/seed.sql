@@ -387,13 +387,13 @@ ON CONFLICT (course_id, slug) DO UPDATE SET
   description = EXCLUDED.description,
   position = EXCLUDED.position;
 
--- Lab 3: SQL Injection Básico
+-- Lab 3: Introducción a Mimikatz
 INSERT INTO laboratories (module_id, slug, title, content_markdown, position, estimated_minutes, points, is_published)
 SELECT cm.id,
-  'sql-injection-basico',
-  'SQL Injection Básico',
-  E'## ¿Qué es SQL Injection?\n\n**SQL Injection (SQLi)** es una vulnerabilidad que permite a un atacante interferir con las consultas que una aplicación hace a su base de datos. Ocurre cuando la entrada del usuario se concatena directamente en una query SQL sin sanitizar.\n\n## Payload clásico\n\n```sql\n\' OR \'1\'=\'1\n```\n\nAl ingresar esto en un campo de login sin protección, la query resultante siempre devuelve verdadero.\n\n## sqlmap\n\n**sqlmap** automatiza la detección y explotación de SQLi.\n\n```bash\nsqlmap -u "http://10.10.10.1/login?id=1" --dbs\n```\n\nEsto detecta el motor de BD y lista las bases de datos disponibles.\n\n---\nCompleta el quiz y la actividad para ganar **200 puntos**.',
-  1, 30, 200, TRUE
+  'mimikatz-intro',
+  'Introducción a Mimikatz',
+  E'## ¿Qué es Mimikatz?\n\n**Mimikatz** es una herramienta de código abierto desarrollada por Benjamin Delpy que permite extraer credenciales en texto plano, hashes NTLM, tickets Kerberos y otros secretos directamente de la memoria del proceso **LSASS** (Local Security Authority Subsystem Service) en sistemas Windows.\n\n## ¿Por qué es importante?\n\nMimikatz es una de las herramientas más utilizadas en ataques post-explotación y en pruebas de penetración. Comprender cómo funciona es esencial tanto para atacar como para defender sistemas Windows.\n\n## Requisitos previos\n\nPara ejecutar Mimikatz con todas sus funciones necesitas:\n\n- Privilegios de **Administrador** en el sistema\n- En algunos casos, privilegios de **SYSTEM**\n- El privilegio de depuración (`SeDebugPrivilege`) habilitado\n\n## Comando básico\n\n```\nmimikatz # privilege::debug\nmimikatz # sekurlsa::logonpasswords\n```\n\nEl comando `sekurlsa::logonpasswords` extrae todas las credenciales activas en memoria, incluyendo contraseñas en texto plano si el sistema lo permite.\n\n---\nCompleta el quiz y la actividad para ganar **250 puntos**.',
+  1, 30, 250, TRUE
 FROM course_modules cm
 WHERE cm.slug = 'vulnerabilidades-web'
 ON CONFLICT (module_id, slug) DO UPDATE SET
@@ -406,153 +406,325 @@ ON CONFLICT (module_id, slug) DO UPDATE SET
 
 -- Preguntas del Lab 3
 INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
-SELECT l.id, 1, 'multiple_choice', '¿En qué categoría del OWASP Top 10 se clasifica SQL Injection?', 'SQLi pertenece a la categoría A03:2021 - Injection, una de las vulnerabilidades más críticas y prevalentes.'
-FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+SELECT l.id, 1, 'multiple_choice', '¿Qué proceso de Windows contiene las credenciales que Mimikatz extrae de memoria?', 'LSASS (Local Security Authority Subsystem Service) es el proceso responsable de la autenticación en Windows y almacena credenciales en memoria.'
+FROM laboratories l WHERE l.slug = 'mimikatz-intro'
 ON CONFLICT (laboratory_id, question_order) DO NOTHING;
 
 INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
-SELECT l.id, 2, 'multiple_choice', '¿Cuál de estos payloads prueba una SQL Injection básica en un campo de login?', 'El payload " '' OR ''1''=''1 " hace que la condición WHERE siempre sea verdadera, permitiendo eludir la autenticación.'
-FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+SELECT l.id, 2, 'multiple_choice', '¿Quién desarrolló Mimikatz?', 'Benjamin Delpy, conocido como "gentilkiwi", desarrolló Mimikatz originalmente como prueba de concepto para demostrar vulnerabilidades en la gestión de credenciales de Windows.'
+FROM laboratories l WHERE l.slug = 'mimikatz-intro'
 ON CONFLICT (laboratory_id, question_order) DO NOTHING;
 
 INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
-SELECT l.id, 3, 'multiple_choice', '¿Qué herramienta automatiza la detección y explotación de SQL Injection?', 'sqlmap es la herramienta estándar para automatizar el proceso de detección y explotación de SQLi.'
-FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+SELECT l.id, 3, 'multiple_choice', '¿Qué privilegio necesita Mimikatz para acceder a LSASS?', 'SeDebugPrivilege permite a un proceso leer y escribir en la memoria de otros procesos. Es necesario para acceder a LSASS y extraer credenciales.'
+FROM laboratories l WHERE l.slug = 'mimikatz-intro'
 ON CONFLICT (laboratory_id, question_order) DO NOTHING;
 
 INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
-SELECT l.id, 4, 'multiple_choice', '¿Qué cláusula SQL permite combinar resultados de dos queries en un ataque UNION-based SQLi?', 'La cláusula UNION combina el resultado de dos SELECT. En SQLi UNION-based se usa para extraer datos de otras tablas.'
-FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+SELECT l.id, 4, 'multiple_choice', '¿Qué módulo de Mimikatz se usa para extraer credenciales de sesiones activas?', 'El módulo sekurlsa contiene comandos para interactuar con LSASS. sekurlsa::logonpasswords extrae credenciales de todas las sesiones activas.'
+FROM laboratories l WHERE l.slug = 'mimikatz-intro'
 ON CONFLICT (laboratory_id, question_order) DO NOTHING;
 
 INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
-SELECT l.id, 5, 'activity_response', 'Usa sqlmap para listar las bases de datos del objetivo. Copia la respuesta generada.', 'sqlmap -u "http://10.10.10.1/login?id=1" --dbs'
-FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+SELECT l.id, 5, 'activity_response', 'Ejecuta Mimikatz para habilitar el privilegio de depuración y extraer credenciales. Copia la respuesta generada.', 'privilege::debug habilita SeDebugPrivilege. sekurlsa::logonpasswords extrae credenciales activas de LSASS.'
+FROM laboratories l WHERE l.slug = 'mimikatz-intro'
 ON CONFLICT (laboratory_id, question_order) DO NOTHING;
 
 -- Opciones para Lab 3 pregunta 1
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 1, 'A03 - Injection', TRUE
+SELECT q.id, 1, 'LSASS (Local Security Authority Subsystem Service)', TRUE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 1
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 2, 'A01 - Broken Access Control', FALSE
+SELECT q.id, 2, 'svchost.exe', FALSE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 1
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 3, 'A07 - Identification Failures', FALSE
+SELECT q.id, 3, 'winlogon.exe', FALSE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 1
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 4, 'A02 - Cryptographic Failures', FALSE
+SELECT q.id, 4, 'explorer.exe', FALSE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 1
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 -- Opciones para Lab 3 pregunta 2
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 1, ''' OR ''1''=''1', TRUE
+SELECT q.id, 1, 'Benjamin Delpy', TRUE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 2
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 2, '<script>alert(1)</script>', FALSE
+SELECT q.id, 2, 'Raphael Mudge', FALSE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 2
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 3, '../../../etc/passwd', FALSE
+SELECT q.id, 3, 'HD Moore', FALSE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 2
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 4, '%00', FALSE
+SELECT q.id, 4, 'Gordon Lyon', FALSE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 2
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 -- Opciones para Lab 3 pregunta 3
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 1, 'sqlmap', TRUE
+SELECT q.id, 1, 'SeDebugPrivilege', TRUE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 3
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 2, 'nmap', FALSE
+SELECT q.id, 2, 'SeBackupPrivilege', FALSE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 3
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 3, 'wireshark', FALSE
+SELECT q.id, 3, 'SeTakeOwnershipPrivilege', FALSE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 3
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 4, 'gobuster', FALSE
+SELECT q.id, 4, 'SeNetworkLogonRight', FALSE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 3
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 -- Opciones para Lab 3 pregunta 4
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 1, 'UNION', TRUE
+SELECT q.id, 1, 'sekurlsa', TRUE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 4
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 2, 'JOIN', FALSE
+SELECT q.id, 2, 'kerberos', FALSE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 4
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 3, 'GROUP BY', FALSE
+SELECT q.id, 3, 'lsadump', FALSE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 4
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
-SELECT q.id, 4, 'HAVING', FALSE
+SELECT q.id, 4, 'token', FALSE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 4
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 -- Actividad para Lab 3 pregunta 5
 INSERT INTO question_activities (question_id, title, instructions_markdown, expected_action_key, success_feedback, is_published)
 SELECT q.id,
-  'Enumeración de bases de datos con sqlmap',
-  E'## Objetivo\n\nUsa sqlmap para detectar si el endpoint es vulnerable a SQLi y listar las bases de datos disponibles.\n\n## Instrucciones\n\n```bash\nsqlmap -u "http://10.10.10.1/login?id=1" --dbs\n```\n\n- `-u`: URL objetivo con el parámetro vulnerable\n- `--dbs`: lista todas las bases de datos\n\nCopia la **respuesta generada** y úsala en la pregunta del quiz.',
-  'sqlmap -u "http://10.10.10.1/login?id=1" --dbs',
-  '¡Excelente! Has enumerado las bases de datos. Copia esta respuesta para el quiz.',
+  'Extracción de credenciales con Mimikatz',
+  E'## Objetivo\n\nUsa Mimikatz para habilitar el privilegio de depuración y extraer las credenciales de las sesiones activas en el sistema.\n\n## Instrucciones\n\n```\nmimikatz # privilege::debug\nmimikatz # sekurlsa::logonpasswords\n```\n\n- `privilege::debug`: habilita `SeDebugPrivilege` para acceder a LSASS\n- `sekurlsa::logonpasswords`: extrae credenciales de todas las sesiones activas\n\nCopia la **respuesta generada** y úsala en la pregunta del quiz.',
+  'sekurlsa::logonpasswords',
+  '¡Muy bien! Has extraído credenciales de memoria con Mimikatz. Copia esta respuesta para el quiz.',
+  TRUE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-intro' AND q.question_order = 5
+ON CONFLICT (question_id) DO NOTHING;
+
+-- Lab 4: Mimikatz Avanzado
+INSERT INTO laboratories (module_id, slug, title, content_markdown, position, estimated_minutes, points, is_published)
+SELECT cm.id,
+  'sql-injection-basico',
+  'Mimikatz Avanzado',
+  E'## Técnicas avanzadas con Mimikatz\n\nUna vez que dominas la extracción básica de credenciales, Mimikatz ofrece técnicas avanzadas para moverse lateralmente y escalar privilegios dentro de un dominio de Active Directory.\n\n## Pass-the-Hash (PtH)\n\nPermite autenticarse usando solo el hash NTLM, sin conocer la contraseña en texto plano.\n\n```\nmimikatz # sekurlsa::pth /user:Administrador /domain:CORP /ntlm:<hash> /run:cmd.exe\n```\n\n## Golden Ticket\n\nForja un Ticket Granting Ticket (TGT) de Kerberos falso con vigencia arbitraria, usando el hash del account KRBTGT.\n\n```\nmimikatz # kerberos::golden /user:Administrador /domain:corp.local /sid:<SID> /krbtgt:<hash> /ticket:golden.kirbi\n```\n\n## DCSync\n\nSimula un controlador de dominio para replicar los hashes de todos los usuarios del dominio sin necesidad de ejecutar código en el DC.\n\n```\nmimikatz # lsadump::dcsync /domain:corp.local /user:krbtgt\n```\n\n---\nCompleta el quiz y la actividad para ganar **300 puntos**.',
+  2, 30, 300, TRUE
+FROM course_modules cm
+WHERE cm.slug = 'vulnerabilidades-web'
+ON CONFLICT (module_id, slug) DO UPDATE SET
+  title = EXCLUDED.title,
+  content_markdown = EXCLUDED.content_markdown,
+  position = EXCLUDED.position,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  points = EXCLUDED.points,
+  is_published = EXCLUDED.is_published;
+
+-- Preguntas del Lab 4
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 1, 'multiple_choice', '¿Qué técnica permite autenticarse en Windows usando solo el hash NTLM sin conocer la contraseña?', 'Pass-the-Hash (PtH) explota el protocolo NTLM, que acepta el hash directamente en el proceso de autenticación sin necesitar la contraseña original.'
+FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 2, 'multiple_choice', '¿Qué cuenta de Active Directory se compromete para crear un Golden Ticket?', 'KRBTGT es la cuenta de servicio usada por el KDC (Key Distribution Center) de Kerberos. Su hash permite forjar TGTs válidos para cualquier usuario del dominio.'
+FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 3, 'multiple_choice', '¿Qué módulo de Mimikatz implementa el ataque DCSync?', 'lsadump::dcsync simula la replicación de un DC usando el protocolo MS-DRSR, permitiendo obtener los hashes de contraseñas de cualquier cuenta del dominio.'
+FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 4, 'multiple_choice', '¿Qué tipo de ticket de Kerberos forja un ataque Golden Ticket?', 'Un TGT (Ticket Granting Ticket) es el ticket inicial que emite el KDC tras la autenticación. Un Golden Ticket es un TGT falso que permite acceder a cualquier servicio del dominio.'
+FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 5, 'activity_response', 'Usa Mimikatz para realizar un DCSync y extraer el hash de la cuenta krbtgt. Copia la respuesta generada.', 'lsadump::dcsync /domain:corp.local /user:krbtgt replica las credenciales del DC sin ejecutar código en él.'
+FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+-- Opciones para Lab 4 pregunta 1
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'Pass-the-Hash (PtH)', TRUE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'Golden Ticket', FALSE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'DCSync', FALSE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'Kerberoasting', FALSE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Opciones para Lab 4 pregunta 2
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'KRBTGT', TRUE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'Administrator', FALSE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'SYSTEM', FALSE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'Guest', FALSE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Opciones para Lab 4 pregunta 3
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'lsadump', TRUE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'sekurlsa', FALSE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'kerberos', FALSE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'token', FALSE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Opciones para Lab 4 pregunta 4
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'TGT (Ticket Granting Ticket)', TRUE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'TGS (Ticket Granting Service)', FALSE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'ST (Service Ticket)', FALSE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'PAC (Privilege Attribute Certificate)', FALSE
+FROM laboratory_questions q
+JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Actividad para Lab 4 pregunta 5
+INSERT INTO question_activities (question_id, title, instructions_markdown, expected_action_key, success_feedback, is_published)
+SELECT q.id,
+  'DCSync: extracción de hash KRBTGT',
+  E'## Objetivo\n\nUsa Mimikatz para simular un controlador de dominio y extraer el hash de la cuenta krbtgt mediante DCSync.\n\n## Instrucciones\n\n```\nmimikatz # lsadump::dcsync /domain:corp.local /user:krbtgt\n```\n\n- `lsadump::dcsync`: replica credenciales usando el protocolo MS-DRSR\n- `/domain`: especifica el dominio objetivo\n- `/user`: la cuenta cuyo hash se quiere obtener\n\nEste ataque no requiere ejecutar código en el Domain Controller. Copia la **respuesta generada** y úsala en la pregunta del quiz.',
+  'lsadump::dcsync /domain:corp.local /user:krbtgt',
+  '¡Excelente! Has realizado un DCSync exitoso. Copia esta respuesta para el quiz.',
   TRUE
 FROM laboratory_questions q
 JOIN laboratories l ON q.laboratory_id = l.id

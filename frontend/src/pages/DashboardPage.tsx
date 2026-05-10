@@ -395,6 +395,53 @@ export default function DashboardPage() {
                     isDark={isDark}
                     mono
                   />
+
+                  {/* Cursos inscritos */}
+                  <div>
+                    <p
+                      className="font-mono text-[10px] tracking-[0.18em] uppercase mb-2"
+                      style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
+                    >
+                      Cursos inscritos
+                    </p>
+                    {coursesLoading ? (
+                      <p className="font-mono text-[13px]" style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}>—</p>
+                    ) : enrolledCourses.length === 0 ? (
+                      <p className="text-[14px] italic" style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}>
+                        Sin cursos inscritos aún.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        {enrolledCourses.map(c => (
+                          <button
+                            key={c.id}
+                            onClick={() => navigate(`/courses/${c.slug}`)}
+                            className="flex items-center gap-2 w-fit px-3 py-1.5 rounded-lg text-[13px] font-mono transition-all duration-150 text-left"
+                            style={{
+                              color: isDark ? '#7B9FE8' : '#1A3F96',
+                              background: isDark ? 'rgba(26,63,150,0.08)' : 'rgba(26,63,150,0.06)',
+                              border: '1px solid rgba(26,63,150,0.18)',
+                            }}
+                            onMouseEnter={e => {
+                              const el = e.currentTarget as HTMLElement
+                              el.style.background = 'rgba(26,63,150,0.16)'
+                              el.style.color = '#2596be'
+                            }}
+                            onMouseLeave={e => {
+                              const el = e.currentTarget as HTMLElement
+                              el.style.background = isDark ? 'rgba(26,63,150,0.08)' : 'rgba(26,63,150,0.06)'
+                              el.style.color = isDark ? '#7B9FE8' : '#1A3F96'
+                            }}
+                          >
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
+                              <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                            {c.title}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

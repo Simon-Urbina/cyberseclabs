@@ -7,6 +7,8 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import CoursePage from './pages/CoursePage'
+import LabPage from './pages/LabPage'
+import PublicProfilePage from './pages/PublicProfilePage'
 import NotFoundPage from './pages/NotFoundPage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -49,6 +51,16 @@ function AppShell() {
             <CoursePage />
           </PrivateRoute>
         } />
+
+        {/* Lab page */}
+        <Route path="/courses/:slug/:moduleSlug/:labSlug" element={
+          <PrivateRoute>
+            <LabPage />
+          </PrivateRoute>
+        } />
+
+        {/* Public user profiles */}
+        <Route path="/u/:username" element={<PublicProfilePage />} />
 
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />

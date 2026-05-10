@@ -1,4 +1,5 @@
 import { UserDAO } from '../daos/UserDAO.js'
+import { CourseEnrollmentDAO } from '../daos/CourseEnrollmentDAO.js'
 import { HTTPError, ValidationError } from '../utils/errors.js'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
@@ -9,9 +10,10 @@ export class UserService {
   static async getPublicProfile(username: string) {
     const user = await UserDAO.findByUsername(username)
     if (!user) throw new HTTPError(404, 'Usuario no encontrado.')
-    const [completedLabs, rank] = await Promise.all([
+    const [completedLabs, rank, enrolledCourses] = await Promise.all([
       UserDAO.countCompletedLabs(user.id),
       UserDAO.getRank(user.id),
+      CourseEnrollmentDAO.findCourseSummariesByUserId(user.id),
     ])
     return {
       id: user.id,
@@ -19,8 +21,10 @@ export class UserService {
       bio: user.bio,
       profileImage: user.profileImage ? Buffer.from(user.profileImage).toString('base64') : null,
       points: user.points,
+      createdAt: user.createdAt,
       completedLabs,
       rank,
+      enrolledCourses,
     }
   }
 

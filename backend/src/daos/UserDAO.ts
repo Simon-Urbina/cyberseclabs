@@ -90,7 +90,7 @@ export class UserDAO {
   static async getRank(userId: string): Promise<number | null> {
     const [row] = await sql<[{ rank: string }]>`
       SELECT rank FROM (
-        SELECT id, RANK() OVER (ORDER BY points DESC) AS rank
+        SELECT id, ROW_NUMBER() OVER (ORDER BY points DESC, username ASC) AS rank
         FROM users WHERE deleted_at IS NULL
       ) ranked
       WHERE id = ${userId}

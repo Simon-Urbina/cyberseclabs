@@ -142,7 +142,7 @@ export default function AuthLayout({
 
           {/* Terminal widget */}
           <div
-            className="animate-fade-up-5 rounded-2xl overflow-hidden"
+            className="animate-fade-up-5 rounded-2xl overflow-hidden mt-14"
             style={{
               background: 'rgba(6, 13, 31, 0.85)',
               border: '1px solid rgba(26, 63, 150, 0.22)',

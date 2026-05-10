@@ -21,4 +21,14 @@ export class CourseEnrollmentDAO {
       SELECT * FROM course_enrollments WHERE user_id = ${userId}
     `
   }
+
+  static async findCourseSummariesByUserId(userId: string): Promise<{ id: string; title: string; slug: string }[]> {
+    return sql`
+      SELECT c.id, c.title, c.slug
+      FROM course_enrollments ce
+      JOIN courses c ON c.id = ce.course_id
+      WHERE ce.user_id = ${userId}
+      ORDER BY ce.enrolled_at ASC
+    `
+  }
 }
