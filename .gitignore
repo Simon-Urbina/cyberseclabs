@@ -28,6 +28,12 @@ frontend/.env.*
 backend/.env
 backend/.env.*
 
+# Claude Code local config
+.claude/
+
+# Brainstorming / design docs (plugin output)
+docs/superpowers/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
