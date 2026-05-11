@@ -1,4 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { ToastProvider } from './context/ToastContext'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Header from './components/Header'
@@ -13,6 +15,13 @@ import LabPage from './pages/LabPage'
 import PublicProfilePage from './pages/PublicProfilePage'
 import AboutPage from './pages/AboutPage'
 import NotFoundPage from './pages/NotFoundPage'
+import ChatWidget from './components/ChatWidget'
+
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  return null
+}
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth()
@@ -30,6 +39,7 @@ function AppShell() {
 
   return (
     <div className="min-h-screen" style={{ background: isDark ? '#060D1F' : '#EEF3FC' }}>
+      <ScrollToTop />
       <Routes>
         {/* Public landing */}
         <Route path="/" element={<LandingPage />} />
@@ -73,6 +83,7 @@ function AppShell() {
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      <ChatWidget />
     </div>
   )
 }
@@ -82,7 +93,9 @@ export default function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <AppShell />
+          <ToastProvider>
+            <AppShell />
+          </ToastProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
