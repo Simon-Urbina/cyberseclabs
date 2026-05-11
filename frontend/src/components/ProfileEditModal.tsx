@@ -281,9 +281,11 @@ export default function ProfileEditModal({ open, onClose, initialProfile, onUpda
         onClick={e => e.stopPropagation()}
         className="relative w-full max-w-[520px] rounded-3xl overflow-hidden"
         style={{
-          background: isDark ? '#091520' : '#f8faff',
-          border: `1px solid ${isDark ? 'rgba(26,63,150,0.22)' : 'rgba(26,63,150,0.18)'}`,
-          boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 0 60px rgba(26,63,150,0.08)',
+          background: isDark ? 'rgba(9,21,32,0.84)' : 'rgba(248,250,255,0.92)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: `1px solid ${isDark ? 'rgba(26,63,150,0.28)' : 'rgba(26,63,150,0.22)'}`,
+          boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 0 60px rgba(26,63,150,0.10)',
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',

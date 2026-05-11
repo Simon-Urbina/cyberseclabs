@@ -35,6 +35,7 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
+  const [thinking, setThinking] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -67,6 +68,7 @@ export default function ChatWidget() {
     setMessages(history)
     setInput('')
     setStreaming(true)
+    setThinking(true)
 
     const assistantMsg: Message = { role: 'assistant', content: '' }
     setMessages(prev => [...prev, assistantMsg])
@@ -88,26 +90,33 @@ export default function ChatWidget() {
 
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
+      let buffer = ''
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
 
-        const raw = decoder.decode(value, { stream: true })
-        for (const line of raw.split('\n')) {
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+
+        for (const line of lines) {
           if (!line.startsWith('data: ')) continue
-          const payload = line.slice(6)
-          if (payload === '[DONE]') break
+          const payload = line.slice(6).trim()
+          if (payload === '[DONE]') continue
           try {
             const { chunk } = JSON.parse(payload)
-            setMessages(prev => {
-              const updated = [...prev]
-              updated[updated.length - 1] = {
-                ...updated[updated.length - 1],
-                content: updated[updated.length - 1].content + chunk,
-              }
-              return updated
-            })
+            if (chunk) {
+              setThinking(false)
+              setMessages(prev => {
+                const updated = [...prev]
+                updated[updated.length - 1] = {
+                  ...updated[updated.length - 1],
+                  content: updated[updated.length - 1].content + chunk,
+                }
+                return updated
+              })
+            }
           } catch { /* skip malformed chunk */ }
         }
       }
@@ -124,6 +133,7 @@ export default function ChatWidget() {
       }
     } finally {
       setStreaming(false)
+      setThinking(false)
     }
   }
 
@@ -188,9 +198,19 @@ export default function ChatWidget() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2596be" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="4 17 10 11 4 5"/>
-                  <line x1="12" y1="19" x2="20" y2="19"/>
+                {/* Uchi cat icon — header (small) */}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 10 L7.5 3.5 L11.5 8.5 Z" fill="#1A3F96"/>
+                  <path d="M12.5 8.5 L16.5 3.5 L19 10 Z" fill="#1A3F96"/>
+                  <path d="M6.8 9.2 L8.2 5.5 L10.5 8.2 Z" fill="#2596be"/>
+                  <path d="M13.5 8.2 L15.8 5.5 L17.2 9.2 Z" fill="#2596be"/>
+                  <circle cx="12" cy="13.5" r="7.5" fill="#1A3F96"/>
+                  <ellipse cx="9.5" cy="13" rx="1.3" ry="1.6" fill="#F5C500"/>
+                  <ellipse cx="9.5" cy="13" rx="0.55" ry="1.25" fill="#060D1F"/>
+                  <ellipse cx="14.5" cy="13" rx="1.3" ry="1.6" fill="#F5C500"/>
+                  <ellipse cx="14.5" cy="13" rx="0.55" ry="1.25" fill="#060D1F"/>
+                  <path d="M11.2 15.8 L12 15.2 L12.8 15.8 L12 16.3 Z" fill="#2596be"/>
+                  <path d="M10.5 16.8 Q12 17.8 13.5 16.8" stroke="#2596be" strokeWidth="0.8" strokeLinecap="round"/>
                 </svg>
               </div>
               <div>
@@ -198,7 +218,7 @@ export default function ChatWidget() {
                   Uchi
                 </p>
                 <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: textSecondary, letterSpacing: '0.18em', textTransform: 'uppercase', marginTop: '2px' }}>
-                  {streaming ? 'escribiendo...' : 'asistente'}
+                  {thinking ? 'pensando...' : streaming ? 'escribiendo...' : 'asistente'}
                 </p>
               </div>
             </div>
@@ -219,6 +239,7 @@ export default function ChatWidget() {
 
           {/* Messages */}
           <div
+            className="chat-scroll"
             style={{
               flex: 1, overflowY: 'auto', padding: '1rem',
               display: 'flex', flexDirection: 'column', gap: '0.75rem',
@@ -260,9 +281,18 @@ export default function ChatWidget() {
                     wordBreak: 'break-word',
                   }}
                 >
-                  {msg.content}
-                  {msg.role === 'assistant' && streaming && i === messages.length - 1 && msg.content === '' && (
-                    <span className="cursor-blink" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#2596be' }}>▋</span>
+                  {msg.role === 'assistant' && thinking && i === messages.length - 1 && msg.content === '' ? (
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#2596be', letterSpacing: '0.15em' }}>
+                      pensando
+                      <span className="cursor-blink">...</span>
+                    </span>
+                  ) : (
+                    <>
+                      {msg.content}
+                      {msg.role === 'assistant' && streaming && !thinking && i === messages.length - 1 && (
+                        <span className="cursor-blink" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#2596be' }}>▋</span>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -280,11 +310,11 @@ export default function ChatWidget() {
           >
             <div
               style={{
-                display: 'flex', alignItems: 'flex-end', gap: '0.5rem',
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
                 background: inputBg,
                 border: `1px solid ${border}`,
                 borderRadius: '0.875rem',
-                padding: '0.5rem 0.5rem 0.5rem 0.875rem',
+                padding: '0.375rem 0.375rem 0.375rem 0.75rem',
               }}
             >
               <textarea
@@ -298,13 +328,15 @@ export default function ChatWidget() {
                 style={{
                   flex: 1, background: 'transparent', border: 'none', outline: 'none',
                   resize: 'none', fontFamily: 'var(--font-sans)', fontSize: '13px',
-                  color: textPrimary, lineHeight: 1.5, maxHeight: '100px',
-                  overflowY: 'auto',
+                  color: textPrimary, lineHeight: '20px', maxHeight: '100px',
+                  overflowY: 'hidden', padding: 0, margin: 0,
+                  height: '20px', display: 'block',
                 }}
                 onInput={e => {
                   const el = e.currentTarget
-                  el.style.height = 'auto'
+                  el.style.height = '20px'
                   el.style.height = `${Math.min(el.scrollHeight, 100)}px`
+                  el.style.overflowY = el.scrollHeight > 100 ? 'auto' : 'hidden'
                 }}
               />
               <button
@@ -360,9 +392,23 @@ export default function ChatWidget() {
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#2596be' : '#1A3F96'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="4 17 10 11 4 5"/>
-            <line x1="12" y1="19" x2="20" y2="19"/>
+          /* Uchi cat icon — toggle button (large, with whiskers) */
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+            <path d="M5 10 L7.5 3.5 L11.5 8.5 Z" fill={isDark ? '#4A9FCC' : '#1A3F96'}/>
+            <path d="M12.5 8.5 L16.5 3.5 L19 10 Z" fill={isDark ? '#4A9FCC' : '#1A3F96'}/>
+            <path d="M6.8 9.2 L8.2 5.5 L10.5 8.2 Z" fill="#2596be"/>
+            <path d="M13.5 8.2 L15.8 5.5 L17.2 9.2 Z" fill="#2596be"/>
+            <circle cx="12" cy="13.5" r="7.5" fill={isDark ? '#4A9FCC' : '#1A3F96'}/>
+            <ellipse cx="9.5" cy="13" rx="1.3" ry="1.6" fill="#F5C500"/>
+            <ellipse cx="9.5" cy="13" rx="0.55" ry="1.25" fill="#060D1F"/>
+            <ellipse cx="14.5" cy="13" rx="1.3" ry="1.6" fill="#F5C500"/>
+            <ellipse cx="14.5" cy="13" rx="0.55" ry="1.25" fill="#060D1F"/>
+            <path d="M11.2 15.8 L12 15.2 L12.8 15.8 L12 16.3 Z" fill="#2596be"/>
+            <path d="M10.5 16.8 Q12 17.8 13.5 16.8" stroke="#2596be" strokeWidth="0.8" strokeLinecap="round"/>
+            <line x1="7.5" y1="15.2" x2="2.5" y2="14.2" stroke={isDark ? '#7B9FE8' : '#4A70CC'} strokeWidth="0.7" strokeLinecap="round"/>
+            <line x1="7.5" y1="16.4" x2="2.5" y2="16.9" stroke={isDark ? '#7B9FE8' : '#4A70CC'} strokeWidth="0.7" strokeLinecap="round"/>
+            <line x1="16.5" y1="15.2" x2="21.5" y2="14.2" stroke={isDark ? '#7B9FE8' : '#4A70CC'} strokeWidth="0.7" strokeLinecap="round"/>
+            <line x1="16.5" y1="16.4" x2="21.5" y2="16.9" stroke={isDark ? '#7B9FE8' : '#4A70CC'} strokeWidth="0.7" strokeLinecap="round"/>
           </svg>
         )}
       </button>

@@ -116,12 +116,6 @@ export default function LandingPage() {
 
         <div className="relative max-w-7xl mx-auto px-6 lg:px-10 pt-20 pb-28 lg:pt-28 lg:pb-36">
           <div className="max-w-4xl">
-            <p
-              className="font-mono text-xs tracking-[0.22em] uppercase mb-6 animate-fade-up-1"
-              style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
-            >
-              // platform · learn · hack · evolve
-            </p>
             <h1
               className="font-display mb-8 animate-fade-up-2"
               style={{
@@ -132,10 +126,18 @@ export default function LandingPage() {
               }}
             >
               Aprende ciberseguridad{' '}
-              <span style={{
-                color: '#1A3F96',
-                textShadow: isDark ? '0 0 40px rgba(26,63,150,0.5)' : 'none',
-              }}>
+              <span
+                key={isDark ? 'dark' : 'light'}
+                style={{
+                  display: 'inline-block',
+                  backgroundImage: isDark
+                    ? 'linear-gradient(135deg, #4A9FCC 0%, #1A3F96 55%, #7B9FE8 100%)'
+                    : 'linear-gradient(135deg, #1A3F96 0%, #2596be 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
                 rompiendo cosas
               </span>
               .
@@ -144,7 +146,7 @@ export default function LandingPage() {
               className="text-lg lg:text-xl font-light max-w-2xl mb-12 animate-fade-up-3"
               style={{ color: isDark ? '#7B9FE8' : '#2451C8', lineHeight: 1.6 }}
             >
-              CyberSec Labs es la plataforma colombiana de laboratorios prácticos
+              CyberSec Labs es la plataforma de laboratorios prácticos
               donde futuros hackers convierten teoría en skills reales. Sin diapositivas, sin atajos.
             </p>
 

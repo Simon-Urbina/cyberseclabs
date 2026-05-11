@@ -49,7 +49,12 @@
       "Bash(git push *)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\simon\\\\OneDrive\\\\Documents\\\\Santoto\\\\2026-1\\\\Semillero\\\\cybersec-labs\" -Recurse -Filter \"*.sql\")",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\simon\\\\OneDrive\\\\Documents\\\\Santoto\\\\2026-1\\\\Semillero\\\\cybersec-labs\\\\frontend\\\\src\" -Recurse -File)",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(pip install *)",
+      "Bash(python -m uvicorn main:app --port 8001)",
+      "Bash(curl -s http://localhost:8001/health)",
+      "Bash(git restore *)",
+      "Bash(python -c ' *)"
     ]
   }
 }

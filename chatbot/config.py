@@ -17,4 +17,4 @@ else:
         base_url=os.getenv("OLLAMA_URL", "http://localhost:11434/v1"),
         api_key="ollama",
     )
-    MODEL = "qwen2.5:7b"
+    MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")

@@ -36,8 +36,10 @@ cybersec-labs/
 └── frontend/
     └── src/
         ├── context/             # AuthContext, ThemeContext
+        ├── lib/                 # api.ts — cliente HTTP centralizado
         ├── components/          # Header, Footer, CourseCard, Ranking, modals…
-        └── pages/               # LandingPage, LoginPage, RegisterPage, DashboardPage, NotFoundPage
+        └── pages/               # Landing, Login, Register, ForgotPassword, ResetPassword,
+                                 # Dashboard, CoursePage, LabPage, PublicProfilePage, AboutPage, NotFoundPage
 ```
 
 ---
@@ -152,6 +154,12 @@ bun preview      # Vista previa del build de producción
 
 Base URL: `http://localhost:3000`
 
+### Estadísticas (`/api/stats`)
+
+| Método | Ruta | Auth | Descripción |
+|--------|------|------|-------------|
+| GET | `/api/stats` | — | Métricas globales (cursos, labs, usuarios, puntos) |
+
 ### Autenticación (`/api/auth`)
 
 | Método | Ruta | Auth | Descripción |
@@ -159,6 +167,8 @@ Base URL: `http://localhost:3000`
 | POST | `/api/auth/register` | — | Registrar usuario |
 | POST | `/api/auth/login` | — | Iniciar sesión → devuelve JWT |
 | POST | `/api/auth/logout` | Bearer | Cerrar sesión |
+| POST | `/api/auth/forgot-password` | — | Enviar email de restablecimiento |
+| POST | `/api/auth/reset-password` | — | Restablecer contraseña con token |
 
 ### Usuarios (`/api/users`)
 

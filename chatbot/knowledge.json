@@ -1,0 +1,82 @@
+[
+  {
+    "q": "¿Qué es CyberSec Labs?",
+    "a": "CyberSec Labs es una plataforma de aprendizaje de ciberseguridad práctica de la Universidad Santo Tomás Tunja. Los estudiantes completan laboratorios interactivos con escenarios reales, ganan puntos y compiten en un ranking global."
+  },
+  {
+    "q": "¿Qué hace diferente a CyberSec Labs de otras plataformas?",
+    "a": "CyberSec Labs es 100% hands-on: sin diapositivas, sin teoría plana. Cada actividad existe para enseñar algo concreto que se puede aplicar de inmediato. El enfoque es aprender rompiendo cosas en entornos controlados."
+  },
+  {
+    "q": "¿Cómo me registro o creo una cuenta?",
+    "a": "Haz clic en 'Empezar gratis' en la página principal, o ve a /register. Solo necesitas un nombre de usuario, correo y contraseña. El registro es gratuito."
+  },
+  {
+    "q": "¿Cómo me inscribo en un curso?",
+    "a": "Ve al Dashboard, busca el curso que te interesa y haz clic en 'Inscribirme'. Aparecerá un modal de confirmación. Al aceptar, tendrás acceso a todos los laboratorios del curso."
+  },
+  {
+    "q": "¿Cómo funciona el sistema de puntos?",
+    "a": "Cada laboratorio tiene una cantidad de puntos asignada. Para ganar esos puntos debes completar el lab: trabajar en las actividades de terminal y responder correctamente el quiz de 5 preguntas. Los puntos se suman automáticamente a tu perfil la primera vez que completas el lab."
+  },
+  {
+    "q": "¿Cuántas preguntas tiene el quiz de cada laboratorio?",
+    "a": "Cada laboratorio tiene exactamente 5 preguntas de quiz. Debes responder las 5 para enviar el intento."
+  },
+  {
+    "q": "¿Qué tipos de preguntas hay en los laboratorios?",
+    "a": "Hay dos tipos: preguntas de selección múltiple (con opciones para elegir) y preguntas de respuesta de actividad (donde debes ejecutar comandos en la terminal y enviar la respuesta que obtienes)."
+  },
+  {
+    "q": "¿Cómo funciona la terminal en los labs?",
+    "a": "Cada lab tiene una terminal interactiva integrada donde ejecutas comandos reales. Las actividades te piden realizar acciones específicas y la plataforma valida tu respuesta comparándola con la salida esperada."
+  },
+  {
+    "q": "¿Cuáles son los niveles de dificultad?",
+    "a": "Los laboratorios tienen tres niveles: principiante (conceptos básicos y primeros pasos), intermedio (técnicas más avanzadas con mayor complejidad) y avanzado (escenarios complejos que requieren combinar múltiples habilidades)."
+  },
+  {
+    "q": "¿Qué es el ranking?",
+    "a": "El ranking muestra a los usuarios ordenados por puntos totales acumulados. Se actualiza en tiempo real cada vez que alguien completa un lab. Puedes ver el top 5 en la página principal y el ranking completo en el Dashboard."
+  },
+  {
+    "q": "¿Cómo subo en el ranking?",
+    "a": "Completando laboratorios. Cada lab completado suma sus puntos a tu total. Mientras más labs completes y más difíciles sean, más puntos acumulas y más subes en el ranking."
+  },
+  {
+    "q": "¿Qué es el Dashboard?",
+    "a": "El Dashboard es tu página principal después de iniciar sesión. Muestra tu posición en el ranking, tus puntos totales, los cursos en los que estás inscrito y tu progreso en cada uno."
+  },
+  {
+    "q": "¿Cómo veo mi perfil o lo edito?",
+    "a": "Haz clic en tu avatar o nombre de usuario en la esquina superior derecha del header. Puedes editar tu nombre de usuario, correo y contraseña desde el modal de perfil."
+  },
+  {
+    "q": "¿Puedo ver el perfil de otros usuarios?",
+    "a": "Sí. Cada usuario tiene un perfil público en /u/nombre-de-usuario donde se muestran sus puntos, laboratorios completados y posición en el ranking."
+  },
+  {
+    "q": "¿Cómo está organizado el contenido?",
+    "a": "El contenido se organiza en: Cursos → Módulos → Laboratorios. Cada curso agrupa módulos temáticos, y cada módulo contiene varios laboratorios prácticos."
+  },
+  {
+    "q": "¿Qué pasa si fallo el quiz de un lab?",
+    "a": "Puedes reintentar el quiz. Los puntos solo se otorgan la primera vez que completas exitosamente el laboratorio."
+  },
+  {
+    "q": "¿Cómo recupero mi contraseña?",
+    "a": "En la página de login haz clic en '¿Olvidaste tu contraseña?'. Ingresa tu correo y recibirás un enlace para restablecerla."
+  },
+  {
+    "q": "¿Quién creó CyberSec Labs?",
+    "a": "CyberSec Labs fue creada por Simón Urbina, estudiante de Ingeniería de Sistemas de la Universidad Santo Tomás seccional Tunja, como proyecto del semillero de investigación en ciberseguridad."
+  },
+  {
+    "q": "¿La plataforma es gratuita?",
+    "a": "Sí, CyberSec Labs es completamente gratuita. Solo necesitas crear una cuenta para acceder a todos los cursos y laboratorios."
+  },
+  {
+    "q": "¿Qué es ciberseguridad según CyberSec Labs?",
+    "a": "En CyberSec Labs entendemos la ciberseguridad como la práctica de proteger sistemas, redes y datos aprendiendo a atacarlos en entornos controlados. El enfoque es ofensivo-defensivo: para defender bien, primero hay que saber cómo se rompe."
+  }
+]

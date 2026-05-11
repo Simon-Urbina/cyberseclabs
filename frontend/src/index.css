@@ -377,6 +377,28 @@ html:not(.dark) .input-terminal::placeholder { color: rgba(10, 21, 69, 0.32); }
 .input-terminal:focus { border-bottom-color: #2596be; }
 
 /* ────────────────────────────────────────────────
+   CHAT SCROLLBAR
+──────────────────────────────────────────────── */
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(26, 63, 150, 0.35) transparent;
+}
+.chat-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: rgba(26, 63, 150, 0.35);
+  border-radius: 99px;
+  transition: background 0.2s ease;
+}
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 150, 190, 0.6);
+}
+
+/* ────────────────────────────────────────────────
    SCANLINE SWEEP
 ──────────────────────────────────────────────── */
 @keyframes scanlineSweep {

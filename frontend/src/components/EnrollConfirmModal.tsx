@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
+import { useToast } from '../context/ToastContext'
 import { api } from '../lib/api'
 import type { Course } from './CourseCard'
 
@@ -11,6 +12,7 @@ interface Props {
 
 export default function EnrollConfirmModal({ course, onClose, onEnrolled }: Props) {
   const { theme } = useTheme()
+  const { addToast } = useToast()
   const isDark = theme === 'dark'
 
   const [loading, setLoading] = useState(false)
@@ -37,6 +39,7 @@ export default function EnrollConfirmModal({ course, onClose, onEnrolled }: Prop
     setLoading(true)
     try {
       await api.post(`/api/courses/${course.slug}/enroll`, {})
+      addToast(`¡Inscrito en ${course.title}!`)
       onEnrolled(course)
     } catch (err: any) {
       setError(err.message)
@@ -58,9 +61,11 @@ export default function EnrollConfirmModal({ course, onClose, onEnrolled }: Prop
         onClick={e => e.stopPropagation()}
         className="relative w-full max-w-[460px] rounded-3xl overflow-hidden"
         style={{
-          background: isDark ? '#091520' : '#f8faff',
-          border: `1px solid ${isDark ? 'rgba(26,63,150,0.22)' : 'rgba(26,63,150,0.18)'}`,
-          boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 0 60px rgba(26,63,150,0.08)',
+          background: isDark ? 'rgba(9,21,32,0.84)' : 'rgba(248,250,255,0.92)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: `1px solid ${isDark ? 'rgba(26,63,150,0.28)' : 'rgba(26,63,150,0.22)'}`,
+          boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 0 60px rgba(26,63,150,0.10)',
         }}
       >
         {/* Top accent line */}

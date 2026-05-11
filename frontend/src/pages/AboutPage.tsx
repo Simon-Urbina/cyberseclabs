@@ -154,20 +154,31 @@ export default function AboutPage() {
                 style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}>
                 // el creador de la plataforma
               </p>
-              <h1
-                className="font-display mb-6 animate-fade-up-2"
-                style={{
-                  fontSize: 'clamp(2.6rem, 5.5vw, 4.2rem)',
-                  lineHeight: 1.05,
-                  letterSpacing: '-0.015em',
-                  color: isDark ? '#C8D5EE' : '#0A1545',
-                }}
-              >
-                Simón<br />
-                <span style={{ color: '#1A3F96', textShadow: isDark ? '0 0 40px rgba(26,63,150,0.5)' : 'none' }}>
-                  Urbina.
-                </span>
-              </h1>
+              <div className="flex items-center gap-5 mb-6 animate-fade-up-2">
+                <img
+                  src="/media/simon_pic.jpg"
+                  alt="Simón Urbina"
+                  className="w-20 h-20 rounded-full object-cover shrink-0"
+                  style={{
+                    border: `2px solid ${isDark ? 'rgba(37,150,190,0.35)' : 'rgba(26,63,150,0.22)'}`,
+                    boxShadow: isDark ? '0 0 24px rgba(37,150,190,0.22)' : '0 4px 16px rgba(10,21,69,0.10)',
+                  }}
+                />
+                <h1
+                  className="font-display"
+                  style={{
+                    fontSize: 'clamp(2.6rem, 5.5vw, 4.2rem)',
+                    lineHeight: 1.05,
+                    letterSpacing: '-0.015em',
+                    color: isDark ? '#C8D5EE' : '#0A1545',
+                  }}
+                >
+                  Simón<br />
+                  <span style={{ color: '#1A3F96', textShadow: isDark ? '0 0 40px rgba(26,63,150,0.5)' : 'none' }}>
+                    Urbina.
+                  </span>
+                </h1>
+              </div>
               <p
                 className="text-lg font-light max-w-lg mb-8 animate-fade-up-3"
                 style={{ color: isDark ? '#7B9FE8' : '#2451C8', lineHeight: 1.7 }}
@@ -177,7 +188,7 @@ export default function AboutPage() {
 
               {/* Tags */}
               <div className="flex flex-wrap gap-2.5 mb-10 animate-fade-up-4">
-                {['IA & Machine Learning', 'Ciberseguridad', 'Desarrollo Web', 'Hacking Ético'].map(tag => (
+                {['IA & Machine Learning', 'Ciberseguridad', 'Desarrollo Web'].map(tag => (
                   <span
                     key={tag}
                     className="font-mono text-[11px] tracking-[0.14em] px-3 py-1.5 rounded-lg"
@@ -259,7 +270,7 @@ export default function AboutPage() {
                     { key: 'rol', value: 'Estudiante / Desarrollador' },
                     { key: 'universidad', value: 'USTA — Tunja, Colombia' },
                     { key: 'carrera', value: 'Ing. de Sistemas' },
-                    { key: 'intereses', value: 'IA · Ciberseguridad · Software' },
+                    { key: 'intereses', value: 'IA · Ciberseguridad · Desarrollo' },
                     { key: 'proyecto', value: 'CyberSec Labs (UCHIE)' },
                   ].map(({ key, value }) => (
                     <p key={key}>
@@ -355,7 +366,7 @@ export default function AboutPage() {
                 // la historia detrás del proyecto
               </p>
               <h2 className="font-display mb-6" style={{ fontSize: 'clamp(1.9rem, 3.5vw, 2.6rem)', lineHeight: 1.15, color: isDark ? '#C8D5EE' : '#0A1545' }}>
-                Por qué existe{' '}
+                Por qué existe <br></br>
                 <span style={{ color: '#2596be' }}>CyberSec Labs</span>.
               </h2>
               <div className="space-y-4 text-[15px] font-light" style={{ color: isDark ? '#4A70CC' : '#2451C8', lineHeight: 1.8 }}>

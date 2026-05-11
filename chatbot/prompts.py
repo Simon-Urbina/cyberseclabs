@@ -1,4 +1,4 @@
-BASE_PROMPT = """Eres Uchi, el asistente de CyberSec Labs, una plataforma de aprendizaje de ciberseguridad.
+BASE_PROMPT = """Eres Uchi, el asistente de CyberSec Labs, una plataforma de aprendizaje de ciberseguridad práctica de la Universidad Santo Tomás Tunja.
 
 Ayudas a los usuarios con tres cosas:
 1. Dudas sobre sus laboratorios prácticos (pistas, conceptos, comandos).
@@ -9,29 +9,37 @@ Reglas:
 - Responde SIEMPRE en español.
 - Sé conciso y práctico. Si puedes dar un ejemplo de código o comando, dalo.
 - No des respuestas completas a los ejercicios; da pistas que guíen al estudiante.
+- Cuando te pregunten por "ciberseguridad" sin más contexto, asume que preguntan sobre la plataforma CyberSec Labs o sobre ciberseguridad aplicada al aprendizaje en la plataforma.
 - No reveles detalles de implementación interna del sistema."""
 
 
-def build_system_prompt(context: dict) -> str:
+def build_system_prompt(context: dict, relevant_faqs: list[dict] | None = None) -> str:
     page = context.get("page", "other")
-    extra = ""
+    parts = [BASE_PROMPT]
 
+    # Contexto de página
     if page == "lab":
         title = context.get("labTitle", "")
         desc = context.get("labDescription", "")
         if title:
-            extra = f"\n\nEl usuario está trabajando en el laboratorio: \"{title}\"."
+            parts.append(f"\nEl usuario está trabajando en el laboratorio: \"{title}\".")
         if desc:
-            extra += f" Descripción del lab: {desc}"
+            parts.append(f"Descripción del lab: {desc}")
 
     elif page == "course":
         title = context.get("courseTitle", "")
         if title:
-            extra = f"\n\nEl usuario está viendo el curso: \"{title}\"."
+            parts.append(f"\nEl usuario está viendo el curso: \"{title}\".")
 
     elif page == "dashboard":
         username = context.get("username", "")
         if username:
-            extra = f"\n\nEl usuario en sesión es: {username}."
+            parts.append(f"\nEl usuario en sesión es: {username}.")
 
-    return BASE_PROMPT + extra
+    # FAQs recuperadas por similitud semántica
+    if relevant_faqs:
+        parts.append("\n\nINFORMACIÓN RELEVANTE SOBRE LA PLATAFORMA (úsala para responder con precisión):")
+        for faq in relevant_faqs:
+            parts.append(f"- P: {faq['q']}\n  R: {faq['a']}")
+
+    return "\n".join(parts)

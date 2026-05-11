@@ -1,7 +1,7 @@
 # Documentación Técnica del Backend — Cybersec Labs
 
 > **Audience:** Desarrolladores o estudiantes que quieran entender cómo está construido el backend de esta plataforma.  
-> **Fecha:** 2026-05-05
+> **Fecha:** 2026-05-11
 
 ---
 
@@ -382,6 +382,8 @@ Todos los endpoints comienzan con el prefijo `/api`.
 | POST | `/register` | ❌ | Registrar nuevo usuario |
 | POST | `/login` | ❌ | Iniciar sesión, recibe token JWT |
 | POST | `/logout` | ✅ | Cierra sesión (el token es stateless, solo es simbólico) |
+| POST | `/forgot-password` | ❌ | Solicitar enlace de restablecimiento de contraseña |
+| POST | `/reset-password` | ❌ | Restablecer contraseña con el token recibido por email |
 
 **Registro — body esperado:**
 ```json
@@ -483,7 +485,23 @@ El body es un JSON libre que representa la acción del usuario. El servidor lo c
 }
 ```
 
-### 7.6 Ranking (`/api/ranking`)
+### 7.6 Estadísticas Públicas (`/api/stats`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| GET | `/` | ❌ | Métricas globales de la plataforma para mostrar en la landing |
+
+**Respuesta:**
+```json
+{
+  "courseCount": 3,
+  "labCount": 18,
+  "totalPoints": 5400,
+  "userCount": 127
+}
+```
+
+### 7.7 Ranking (`/api/ranking`)
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
@@ -503,7 +521,7 @@ El body es un JSON libre que representa la acción del usuario. El servidor lo c
 }
 ```
 
-### 7.7 Admin (`/api/admin`) — Solo para rol `admin`
+### 7.8 Admin (`/api/admin`) — Solo para rol `admin`
 
 Todos estos endpoints requieren token de administrador.
 
