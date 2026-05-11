@@ -19,7 +19,8 @@
 10. [Variables de Entorno](#10-variables-de-entorno)
 11. [Comandos de Desarrollo](#11-comandos-de-desarrollo)
 12. [Despliegue](#12-despliegue)
-13. [Glosario de Términos](#13-glosario-de-términos)
+13. [Microservicio Chatbot (Uchi)](#13-microservicio-chatbot-uchi)
+14. [Glosario de Términos](#14-glosario-de-términos)
 
 ---
 
@@ -32,8 +33,9 @@ El frontend de Cybersec Labs es una **SPA** (*Single Page Application*) construi
 - Mostrar el ranking de usuarios y los perfiles públicos.
 - Gestionar el inicio y cierre de sesión sin recargar la página.
 - Adaptarse al tema claro u oscuro según la preferencia guardada en `localStorage`.
+- Mostrar un asistente de IA ("Uchi") disponible en todas las páginas autenticadas.
 
-El frontend es completamente estático una vez compilado: solo contiene HTML, CSS y JavaScript. Toda la lógica de negocio y el acceso a la base de datos ocurre en el backend (Railway).
+El frontend es completamente estático una vez compilado: solo contiene HTML, CSS y JavaScript. Toda la lógica de negocio y el acceso a la base de datos ocurre en el backend (Railway). El chatbot Uchi se comunica con un microservicio Python separado.
 
 ---
 
@@ -61,10 +63,12 @@ frontend/
 │       └── simon_pic.jpg        ← Foto de perfil del autor (usada en AboutPage)
 ├── src/
 │   ├── main.tsx                 ← Punto de entrada: monta <App /> en el DOM
-│   ├── App.tsx                  ← Router principal, rutas protegidas y públicas
+│   ├── index.css                ← Estilos globales, animaciones y scrollbar del chat
+│   ├── App.tsx                  ← Router principal, rutas protegidas, ScrollToTop y ChatWidget
 │   ├── context/
 │   │   ├── AuthContext.tsx      ← Estado global de autenticación (user, token, login, logout)
-│   │   └── ThemeContext.tsx     ← Estado global del tema (dark/light, toggle)
+│   │   ├── ThemeContext.tsx     ← Estado global del tema (dark/light, toggle)
+│   │   └── ToastContext.tsx     ← Sistema de notificaciones flotantes (addToast)
 │   ├── lib/
 │   │   └── api.ts               ← Cliente HTTP centralizado (get, post, put, patch, delete)
 │   ├── components/
@@ -76,7 +80,8 @@ frontend/
 │   │   ├── Ranking.tsx          ← Tabla de posiciones paginada
 │   │   ├── AuthLayout.tsx       ← Layout centrado para páginas de autenticación
 │   │   ├── EnrollConfirmModal.tsx ← Modal de confirmación de matrícula
-│   │   └── ProfileEditModal.tsx   ← Modal para editar perfil
+│   │   ├── ProfileEditModal.tsx   ← Modal para editar perfil
+│   │   └── ChatWidget.tsx         ← Asistente IA "Uchi" (chat flotante, esquina inferior izquierda)
 │   └── pages/
 │       ├── LandingPage.tsx      ← Página de inicio pública con hero, features y ranking
 │       ├── LoginPage.tsx        ← Formulario de inicio de sesión
@@ -146,6 +151,25 @@ function PublicRoute({ children }) {
 }
 ```
 
+### `AppShell` y componentes globales
+
+`AppShell` es el componente que envuelve todas las rutas. Incluye dos elementos que viven fuera del árbol de rutas:
+
+- **`ScrollToTop`**: escucha cambios de `pathname` y llama a `window.scrollTo(0, 0)` para que cada navegación comience desde el tope.
+- **`ChatWidget`**: el chat de Uchi se monta **una sola vez** en `AppShell`, no dentro de las rutas, para preservar el historial de conversación al navegar entre páginas. Se oculta automáticamente en las rutas de autenticación.
+
+```tsx
+function AppShell() {
+  return (
+    <div style={{ background: isDark ? '#060D1F' : '#EEF3FC' }}>
+      <ScrollToTop />
+      <Routes>{/* ... */}</Routes>
+      <ChatWidget />   {/* siempre montado, se oculta en /login y /register */}
+    </div>
+  )
+}
+```
+
 ---
 
 ## 5. Componentes Compartidos
@@ -182,11 +206,38 @@ Modal de confirmación antes de matricularse en un curso. Muestra el nombre del 
 
 Modal para editar el perfil del usuario autenticado: username, email, bio y foto de perfil. Llama a `PUT /api/users/me` y `POST /api/users/me/avatar`.
 
+### `ChatWidget`
+
+Asistente de IA "Uchi" disponible en toda la plataforma como un widget flotante en la esquina inferior izquierda. Características:
+
+| Característica | Detalle |
+|---|---|
+| **Posición** | `position: fixed`, `bottom: 1.5rem`, `left: 1.5rem` |
+| **Ícono** | Gato SVG con colores institucionales (azul `#1A3F96`, cian `#2596be`, amarillo `#F5C500`) |
+| **Visibilidad** | Se oculta en `/login`, `/register`, `/forgot-password`, `/reset-password` |
+| **Historial** | Guarda hasta 20 mensajes en memoria durante la sesión |
+| **Streaming** | Muestra texto token a token con indicador "escribiendo..." |
+| **Thinking** | Indica "pensando..." mientras espera el primer token |
+| **Contexto** | Envía la página actual al backend para respuestas contextuales |
+| **Mobile** | Panel adaptativo: `calc(100vw - 3rem)` de ancho, `70svh` de alto; overlay de cierre táctil |
+| **Teclado** | `Enter` envía el mensaje; `Shift+Enter` agrega una nueva línea; `Escape` cierra el panel |
+| **SSE** | Lee el stream del microservicio Python línea a línea con buffer acumulativo |
+
+El widget detecta en qué página está el usuario (`pathname`) y construye un objeto `context` que se envía junto con cada mensaje:
+
+```ts
+// Ejemplos de context según pathname
+{ page: 'lab',       labTitle: 'Introducción a XSS', username: 'simon' }
+{ page: 'course',    courseTitle: 'intro-linux',      username: 'simon' }
+{ page: 'dashboard', username: 'simon' }
+{ page: 'other',     username: 'simon' }
+```
+
 ---
 
 ## 6. Gestión de Estado
 
-El estado global se maneja con **React Context** — no se usa Redux ni Zustand. Hay dos contextos:
+El estado global se maneja con **React Context** — no se usa Redux ni Zustand. Hay tres contextos:
 
 ### `AuthContext` (`src/context/AuthContext.tsx`)
 
@@ -224,11 +275,40 @@ const { theme, toggle } = useTheme()
 const isDark = theme === 'dark'
 ```
 
+### `ToastContext` (`src/context/ToastContext.tsx`)
+
+Sistema de notificaciones flotantes no bloqueantes (toasts). Aparecen en la esquina inferior derecha y se auto-descartan a los 4 segundos. Se pueden cerrar manualmente haciendo clic.
+
+Expone:
+
+| Función | Tipo | Descripción |
+|---|---|---|
+| `addToast(message, type?)` | función | Muestra una notificación. `type` por defecto: `'success'` |
+
+Tipos disponibles:
+
+| Tipo | Color de acento | Ícono | Uso típico |
+|---|---|---|---|
+| `'success'` | verde `#4ade80` | `✓` | Operación completada (matrícula, guardado de perfil) |
+| `'error'` | rojo `#f87171` | `✗` | Error de validación o fallo de red |
+| `'info'` | cian `#2596be` | `·` | Información general |
+
+**Uso:**
+```tsx
+const { addToast } = useToast()
+
+addToast('Perfil actualizado')               // success por defecto
+addToast('Contraseña incorrecta', 'error')
+addToast('Recuerda guardar los cambios', 'info')
+```
+
+> **Nota de diseño:** `ToastProvider` está anidado dentro de `AuthProvider` y `ThemeProvider` en `App.tsx`, por lo que los toasts pueden mostrarse desde cualquier página o componente con acceso a los contextos de sesión y tema.
+
 ---
 
 ## 7. Comunicación con el Backend
 
-Todo el acceso al backend pasa por `src/lib/api.ts`. Es un cliente HTTP minimalista construido sobre `fetch`.
+Todo el acceso al backend REST pasa por `src/lib/api.ts`. Es un cliente HTTP minimalista construido sobre `fetch`.
 
 ### Estructura
 
@@ -271,6 +351,8 @@ try {
 
 > **Nota sobre imágenes (avatar):** La subida de foto de perfil usa `fetch` directamente (no `api.ts`) porque se envía como `FormData` con `Content-Type: multipart/form-data`, no como JSON.
 
+> **Nota sobre el chatbot:** La comunicación con el microservicio Python de Uchi **no** pasa por `api.ts`. `ChatWidget` llama directamente a `VITE_CHATBOT_URL/chat/stream` usando `fetch` con streaming SSE. Ver [Sección 13](#13-microservicio-chatbot-uchi).
+
 ---
 
 ## 8. Sistema de Temas (Dark / Light)
@@ -306,6 +388,29 @@ const isDark = theme === 'dark'
 <div style={{ background: isDark ? '#060D1F' : '#EEF3FC' }}>
 ```
 
+### Gradiente de texto
+
+Para texto con gradiente (como "rompiendo cosas" en LandingPage), se usan tres propiedades en combinación y se agrega un `key` que fuerza el re-montaje del `<span>` cuando cambia el tema, evitando que el gradiente quede en blanco:
+
+```tsx
+<span
+  key={isDark ? 'dark' : 'light'}
+  style={{
+    display: 'inline-block',
+    backgroundImage: isDark
+      ? 'linear-gradient(135deg, #4A9FCC 0%, #1A3F96 55%, #7B9FE8 100%)'
+      : 'linear-gradient(135deg, #1A3F96 0%, #2596be 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+  }}
+>
+  rompiendo cosas
+</span>
+```
+
+> Se usa `backgroundImage` (no `background`) porque la propiedad shorthand `background` puede entrar en conflicto con `WebkitTextFillColor: 'transparent'` durante los repintados del navegador.
+
 ---
 
 ## 9. Convenciones de Estilos
@@ -325,10 +430,31 @@ const isDark = theme === 'dark'
 
 ### Animaciones
 
-Las páginas usan animaciones de entrada escalonadas definidas con clases personalizadas:
+Las páginas usan animaciones de entrada escalonadas definidas con clases personalizadas en `src/index.css`:
 - `animate-fade-up-1`, `animate-fade-up-2`, etc. — elementos que entran deslizándose hacia arriba con retraso creciente.
-- `cursor-blink` — efecto de cursor parpadeante en el terminal de la AboutPage.
+- `cursor-blink` — efecto de cursor parpadeante. Usado en la AboutPage y en el indicador de streaming del chatbot (`▋`).
 - `glowPulse` — efecto de brillo pulsante en los orbs decorativos.
+- `slideInRight` — entrada desde la derecha, usada por los toasts de `ToastContext`.
+
+### Scrollbar del chat
+
+El área de mensajes de `ChatWidget` usa la clase `.chat-scroll` definida en `src/index.css` para mostrar una barra de desplazamiento delgada con los colores institucionales:
+
+```css
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(26,63,150,0.35) transparent;
+}
+.chat-scroll::-webkit-scrollbar       { width: 4px; }
+.chat-scroll::-webkit-scrollbar-track { background: transparent; }
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: rgba(26,63,150,0.35);
+  border-radius: 99px;
+}
+.chat-scroll::-webkit-scrollbar-thumb:hover { background: rgba(37,150,190,0.6); }
+```
+
+`scrollbar-width: thin` aplica en Firefox; `::-webkit-scrollbar-*` aplica en Chrome, Edge y Safari.
 
 ### Hover interactivo
 
@@ -338,18 +464,20 @@ Los cards y botones usan `onMouseEnter` / `onMouseLeave` para aplicar estilos di
 
 ## 10. Variables de Entorno
 
-El frontend necesita una sola variable de entorno:
+El frontend necesita las siguientes variables de entorno:
 
 | Variable | Obligatoria | Descripción |
 |---|---|---|
-| `VITE_API_URL` | ❌ | URL base del backend. Si no se define, usa `http://localhost:3000` |
+| `VITE_API_URL` | ❌ | URL base del backend REST. Si no se define, usa `http://localhost:3000` |
+| `VITE_CHATBOT_URL` | ❌ | URL base del microservicio Python de Uchi. Si no se define, usa `http://localhost:8001` |
 
 **En desarrollo** (`frontend/.env`):
 ```env
 VITE_API_URL=http://localhost:3000
+VITE_CHATBOT_URL=http://localhost:8002
 ```
 
-**En producción**, se configura como variable de entorno en el proveedor de hosting (Netlify, Vercel, Cloudflare Pages, etc.) antes del build.
+**En producción**, se configuran como variables de entorno en el proveedor de hosting (Netlify, Vercel, Cloudflare Pages, etc.) antes del build.
 
 > **Importante:** Solo las variables que empiezan con `VITE_` son expuestas al código del navegador por Vite. Variables sin ese prefijo permanecen privadas en el servidor de build.
 
@@ -391,7 +519,7 @@ El contenido de `dist/` es lo que se sube al servidor de hosting.
 VITE_API_URL=https://tu-backend.railway.app bun run build
 ```
 
-O configurar `VITE_API_URL` como variable de entorno en el panel del proveedor y hacer el build ahí.
+O configurar `VITE_API_URL` y `VITE_CHATBOT_URL` como variables de entorno en el panel del proveedor y hacer el build ahí.
 
 ### Paso 2 — Subir `dist/` al hosting
 
@@ -424,7 +552,97 @@ Dado que la app usa React Router con rutas como `/dashboard` o `/courses/:slug`,
 
 ---
 
-## 13. Glosario de Términos
+## 13. Microservicio Chatbot (Uchi)
+
+Uchi es un asistente de IA que vive en un **microservicio Python independiente** (`chatbot/`), separado del backend principal de Hono. El frontend se comunica con él directamente mediante **SSE** (*Server-Sent Events*) para mostrar las respuestas en tiempo real (token a token).
+
+### Arquitectura
+
+```
+ChatWidget (React)
+    │  POST /chat/stream  (fetch + ReadableStream)
+    ▼
+chatbot/main.py  (FastAPI)
+    │
+    ├── retriever.py  ← TF-IDF sobre knowledge.json (RAG)
+    ├── prompts.py    ← Sistema de prompts con contexto de página + FAQs
+    └── config.py     ← Cliente OpenAI-compatible (Ollama local / Groq cloud)
+```
+
+### Flujo de una petición
+
+1. El usuario escribe un mensaje en `ChatWidget`.
+2. React hace `POST /chat/stream` con `{ messages, context }` al microservicio.
+3. FastAPI recupera los 3 FAQs más relevantes de `knowledge.json` usando TF-IDF + similitud coseno.
+4. Construye el system prompt inyectando el contexto de página y los FAQs relevantes.
+5. Llama al LLM (Ollama local o Groq) con `stream=True`.
+6. Transmite cada fragmento de respuesta como `data: {"chunk": "..."}` en formato SSE.
+7. `ChatWidget` acumula los fragmentos y actualiza el mensaje del asistente en tiempo real.
+
+### RAG (Retrieval-Augmented Generation)
+
+En lugar de incluir toda la base de conocimiento en el system prompt (que aumentaría el tamaño de cada petición), solo se inyectan los 3 FAQs más relevantes para la pregunta actual.
+
+- **Base de conocimiento**: `chatbot/knowledge.json` — 20 pares pregunta/respuesta sobre la plataforma (qué es CyberSec Labs, sistema de puntos, ranking, laboratorios, etc.).
+- **Vectorización**: `TfidfVectorizer(ngram_range=(1,2), sublinear_tf=True)` de scikit-learn.
+- **Similitud**: coseno entre el vector de la consulta y la matriz del corpus.
+- **Umbral**: solo se incluyen FAQs con `score >= 0.10`. Si la pregunta es de ciberseguridad general (XSS, SQL injection, etc.), normalmente no supera el umbral y el modelo responde desde su conocimiento base.
+- **Normalización Unicode**: tanto el corpus como la consulta se normalizan antes de indexar/buscar (`"qué" == "que"`, `"cómo" == "como"`), usando `unicodedata.normalize("NFD")` más eliminación de diacríticos.
+
+### Proveedores LLM
+
+El proveedor se selecciona con la variable `PROVIDER` en `chatbot/.env`:
+
+| `PROVIDER` | Modelo | Uso |
+|---|---|---|
+| `ollama` (default) | `qwen2.5:1.5b` (configurable) | Desarrollo local — requiere Ollama corriendo en `localhost:11434` |
+| `groq` | `llama-3.3-70b-versatile` | Producción — requiere `GROQ_API_KEY` |
+
+Ambos usan el mismo cliente Python (`openai.AsyncOpenAI`) cambiando solo `base_url` y `api_key`, ya que Ollama expone una API compatible con OpenAI.
+
+### Lectura SSE en el frontend
+
+`ChatWidget` usa un patrón de buffer acumulativo para manejar correctamente fragmentos de línea SSE que llegan divididos entre múltiples llamadas a `reader.read()`:
+
+```ts
+const reader = res.body.getReader()
+const decoder = new TextDecoder()
+let buffer = ''
+
+while (true) {
+  const { done, value } = await reader.read()
+  if (done) break
+
+  buffer += decoder.decode(value, { stream: true })
+  const lines = buffer.split('\n')
+  buffer = lines.pop() ?? ''   // la última línea puede estar incompleta
+
+  for (const line of lines) {
+    if (!line.startsWith('data: ')) continue
+    const payload = line.slice(6).trim()
+    if (payload === '[DONE]') continue
+    const { chunk } = JSON.parse(payload)
+    // acumula chunk en el mensaje del asistente
+  }
+}
+```
+
+### Comandos del microservicio
+
+```bash
+# Desde la carpeta chatbot/
+pip install fastapi uvicorn openai scikit-learn numpy python-dotenv
+
+# Iniciar en desarrollo (puerto 8002)
+uvicorn main:app --reload --port 8002
+
+# O con el puerto por defecto (8001)
+uvicorn main:app --reload
+```
+
+---
+
+## 14. Glosario de Términos
 
 **Bundle / Build** — El proceso de compilar y empaquetar el código fuente (TypeScript, JSX, CSS) en archivos optimizados que el navegador puede ejecutar directamente.
 
@@ -436,7 +654,7 @@ Dado que la app usa React Router con rutas como `/dashboard` o `/courses/:slug`,
 
 **ESLint** — Herramienta de análisis estático para JavaScript/TypeScript que detecta errores, malas prácticas y problemas de estilo en el código.
 
-**Hook** — Función de React que permite usar características como estado (`useState`) o efectos secundarios (`useEffect`) dentro de componentes funcionales. Los hooks personalizados (como `useAuth`, `useTheme`) encapsulan lógica reutilizable.
+**Hook** — Función de React que permite usar características como estado (`useState`) o efectos secundarios (`useEffect`) dentro de componentes funcionales. Los hooks personalizados (como `useAuth`, `useTheme`, `useToast`) encapsulan lógica reutilizable.
 
 **Hot Reload** — Característica del dev server de Vite que actualiza automáticamente el navegador cuando se guarda un archivo, sin perder el estado de la aplicación.
 
@@ -444,12 +662,22 @@ Dado que la app usa React Router con rutas como `/dashboard` o `/courses/:slug`,
 
 **LocalStorage** — API del navegador para guardar datos como strings en el disco local. El frontend la usa para persistir el token JWT y la preferencia de tema entre sesiones.
 
+**Microservicio** — Servicio independiente con responsabilidad única que se despliega y escala por separado. El chatbot Uchi es un microservicio Python que el frontend llama directamente, sin pasar por el backend principal.
+
 **PrivateRoute** — Componente que verifica si el usuario tiene sesión activa antes de renderizar su contenido. Si no la tiene, redirige al login.
 
+**RAG** — *Retrieval-Augmented Generation*. Técnica que recupera documentos relevantes (FAQs en `knowledge.json`) y los inyecta en el contexto del LLM antes de generar la respuesta, mejorando la precisión sin reentrenar el modelo.
+
 **SPA** — *Single Page Application*. Aplicación web que carga una sola página HTML y actualiza el contenido dinámicamente con JavaScript, sin recargas completas del navegador.
+
+**SSE** — *Server-Sent Events*. Protocolo HTTP unidireccional (servidor → cliente) para transmitir datos en tiempo real. El chatbot lo usa para enviar tokens del LLM a medida que se generan, produciendo el efecto de escritura en tiempo real.
+
+**Toast** — Notificación flotante no bloqueante que aparece brevemente en pantalla para informar al usuario sobre el resultado de una acción (éxito, error o información).
 
 **TypeScript** — Superset de JavaScript con tipos estáticos. Detecta errores de tipado en tiempo de desarrollo. Se "compila" a JavaScript normal para el navegador.
 
 **Vite** — Herramienta moderna de build para proyectos frontend. Usa ES Modules nativos en desarrollo (arranque instantáneo) y Rolldown en producción (bundle optimizado).
 
-**VITE_API_URL** — Variable de entorno que le dice al frontend dónde está el backend. Vite la inyecta en el código durante el build, por lo que el valor queda fijo en el bundle resultante.
+**VITE_API_URL** — Variable de entorno que le dice al frontend dónde está el backend principal (Hono). Vite la inyecta en el código durante el build, por lo que el valor queda fijo en el bundle resultante.
+
+**VITE_CHATBOT_URL** — Variable de entorno que le dice al frontend dónde está el microservicio Python de Uchi. Usada únicamente por `ChatWidget.tsx`.

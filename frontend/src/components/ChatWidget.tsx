@@ -36,9 +36,16 @@ export default function ChatWidget() {
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [thinking, setThinking] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 520)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 520)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   useEffect(() => {
     if (open) {
@@ -150,7 +157,23 @@ export default function ChatWidget() {
   const textSecondary = isDark ? '#4A70CC' : '#2451C8'
   const inputBg       = isDark ? 'rgba(6,13,31,0.6)' : 'rgba(232,238,250,0.7)'
 
+  const panelWidth  = isMobile ? `calc(100vw - 3rem)` : '380px'
+  const panelHeight = isMobile ? '70svh' : '520px'
+
   return (
+    <>
+      {/* Overlay táctil en móvil — toca fuera para cerrar */}
+      {open && isMobile && (
+        <div
+          onClick={() => setOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 49,
+            background: 'rgba(6,13,31,0.4)',
+            backdropFilter: 'blur(2px)',
+            WebkitBackdropFilter: 'blur(2px)',
+          }}
+        />
+      )}
     <div style={{ position: 'fixed', bottom: '1.5rem', left: '1.5rem', zIndex: 50 }}>
       {/* Chat panel */}
       {open && (
@@ -158,11 +181,11 @@ export default function ChatWidget() {
           className="animate-fade-up-1"
           style={{
             marginBottom: '0.75rem',
-            width: '380px',
-            height: '520px',
+            width: panelWidth,
+            height: panelHeight,
             display: 'flex',
             flexDirection: 'column',
-            borderRadius: '1.25rem',
+            borderRadius: isMobile ? '1rem' : '1.25rem',
             overflow: 'hidden',
             background: bg,
             backdropFilter: 'blur(24px)',
@@ -356,9 +379,11 @@ export default function ChatWidget() {
                 </svg>
               </button>
             </div>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: textSecondary, textAlign: 'center', marginTop: '0.375rem', letterSpacing: '0.1em' }}>
-              Enter para enviar · Shift+Enter nueva línea
-            </p>
+            {!isMobile && (
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: textSecondary, textAlign: 'center', marginTop: '0.375rem', letterSpacing: '0.1em' }}>
+                Enter para enviar · Shift+Enter nueva línea
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -413,5 +438,6 @@ export default function ChatWidget() {
         )}
       </button>
     </div>
+    </>
   )
 }

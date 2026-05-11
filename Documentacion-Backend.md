@@ -11,14 +11,15 @@
 2. [Stack Tecnológico](#2-stack-tecnológico)
 3. [Estructura de Carpetas](#3-estructura-de-carpetas)
 4. [Arquitectura en Capas](#4-arquitectura-en-capas)
-5. [Base de Datos](#5-base-de-datos)
-6. [Autenticación y Autorización](#6-autenticación-y-autorización)
-7. [Endpoints de la API](#7-endpoints-de-la-api)
-8. [Lógica de Negocio Clave](#8-lógica-de-negocio-clave)
-9. [Manejo de Errores](#9-manejo-de-errores)
-10. [Variables de Entorno](#10-variables-de-entorno)
-11. [Despliegue](#11-despliegue)
-12. [Glosario de Términos](#12-glosario-de-términos)
+5. [Modelos de Dominio y Validación](#5-modelos-de-dominio-y-validación)
+6. [Base de Datos](#6-base-de-datos)
+7. [Autenticación y Autorización](#7-autenticación-y-autorización)
+8. [Endpoints de la API](#8-endpoints-de-la-api)
+9. [Lógica de Negocio Clave](#9-lógica-de-negocio-clave)
+10. [Manejo de Errores](#10-manejo-de-errores)
+11. [Variables de Entorno](#11-variables-de-entorno)
+12. [Despliegue](#12-despliegue)
+13. [Glosario de Términos](#13-glosario-de-términos)
 
 ---
 
@@ -69,6 +70,7 @@ backend/
 │   │   ├── activities.ts        ← Rutas de actividades prácticas
 │   │   ├── submissions.ts       ← Rutas de envío de quizzes
 │   │   ├── ranking.ts           ← Ruta de tabla de posiciones
+│   │   ├── stats.ts             ← Ruta de estadísticas públicas
 │   │   └── admin.ts             ← Rutas exclusivas del administrador
 │   ├── controllers/
 │   │   ├── AuthController.ts    ← Extrae datos del request y llama al Service correcto
@@ -95,14 +97,28 @@ backend/
 │   │   ├── ActivityActionLogDAO.ts
 │   │   ├── UserActivityProgressDAO.ts
 │   │   └── UserLaboratoryProgressDAO.ts
+│   ├── models/
+│   │   ├── User.ts              ← Clase de dominio con validate() y proyecciones
+│   │   ├── Course.ts
+│   │   ├── CourseModule.ts
+│   │   ├── Laboratory.ts
+│   │   ├── LaboratoryQuestion.ts
+│   │   ├── LaboratoryQuestionOption.ts
+│   │   ├── QuestionActivity.ts
+│   │   ├── Submission.ts
+│   │   ├── CourseEnrollment.ts
+│   │   ├── ActivityActionLog.ts
+│   │   ├── UserActivityProgress.ts
+│   │   ├── UserLaboratoryProgress.ts
+│   │   └── index.ts             ← Re-exporta todos los modelos
 │   └── utils/
-│       ├── errors.ts            ← Clases de error personalizadas
+│       ├── errors.ts            ← Clases de error personalizadas (HTTPError, ValidationError)
 │       └── response.ts          ← Generador de respuestas para actividades
 ├── database/
 │   ├── schema.sql               ← Script SQL que crea todas las tablas
 │   └── seed.sql                 ← Datos de ejemplo para pruebas
-├── package.json                 ← Dependencias y comandos del proyecto
-├── tsconfig.json                ← Configuración del compilador TypeScript
+├── package.json
+├── tsconfig.json
 └── railway.json                 ← Configuración de despliegue en Railway
 ```
 
@@ -129,26 +145,33 @@ HTTP Request
 └──────┬──────┘
        ↓
 ┌─────────────┐
-│  Services   │  "Cerebro": contienen la lógica de negocio. Validan reglas, calculan
-│             │  resultados, coordinan múltiples DAOs. NO hablan con HTTP.
+│  Services   │  "Cerebro": contienen la lógica de negocio. Llaman a Model.validate(),
+│             │  verifican reglas que requieren DB, coordinan múltiples DAOs.
+└──────┬──────┘
+       ↓
+┌─────────────┐
+│   Models    │  Clases de dominio con validación de formato y proyecciones de datos.
+│             │  No acceden a la DB. Solo conocen las reglas del negocio.
 └──────┬──────┘
        ↓
 ┌─────────────┐
 │    DAOs     │  "Archivistas": ejecutan consultas SQL. Solo saben hablar con la DB.
-│  (Data Access│  Devuelven objetos TypeScript.
+│  (Data Access│  Devuelven instancias de los modelos.
 │   Objects)  │
 └──────┬──────┘
        ↓
 ┌─────────────┐
 │  PostgreSQL │  Base de datos. Almacena todos los datos de forma persistente.
+│             │  Triggers automatizan la actualización de progreso y puntos.
 └─────────────┘
 ```
 
 ### ¿Por qué esta separación?
 
 - Si mañana se cambia PostgreSQL por otra base de datos, solo se modifican los DAOs.
-- Si cambia una regla de negocio (ej: el quiz requiere 6 preguntas en vez de 5), solo se edita el Service.
+- Si cambia una regla de negocio (ej: el quiz requiere 6 preguntas en vez de 5), solo se edita el Service y el Model.
 - Si cambia el formato de la respuesta HTTP, solo se toca el Controller.
+- Si cambia una regla de formato (ej: el username permite hasta 60 caracteres), solo se toca el Model.
 
 ### Ejemplo del flujo completo: usuario envía un quiz
 
@@ -166,30 +189,180 @@ POST /api/labs/:labId/submit
    └─ Llama a SubmissionService.submit(userId, labId, answers)
 
 4. SubmissionService.submit()
-   └─ Verifica que el usuario esté inscrito en el curso
+   └─ Verifica que el laboratorio exista y esté publicado
    └─ Verifica que lleguen exactamente 5 respuestas
+   └─ Verifica que el usuario esté inscrito en el curso padre
+   └─ Verifica que cada questionId pertenezca al lab
    └─ Para cada respuesta:
        - Si es multiple_choice: busca la opción y verifica is_correct
-       - Si es activity_response: compara el texto contra el hash guardado
+       - Si es activity_response: compara el texto contra el hash guardado en user_activity_progress
    └─ Calcula scorePercent = (correctas / 5) × 100
-   └─ Llama a SubmissionDAO.create(...)
 
 5. SubmissionDAO.create()
    └─ INSERT INTO submissions (...)
    └─ La base de datos ejecuta el trigger trg_sync_user_laboratory_progress_from_submission
       que actualiza user_laboratory_progress automáticamente
-   └─ Si es la primera vez que completa → otro trigger agrega los puntos al usuario
+   └─ Si es la primera vez que completa con ≥ 60% → trigger agrega los puntos al usuario
 
 6. SubmissionController devuelve:
-   { submissionId, attemptNumber, correctAnswersCount, totalQuestions, scorePercent }
+   { submissionId, attemptNumber, correctAnswersCount, totalQuestions, scorePercent, pointsEarned }
    con HTTP 201 (Created)
 ```
 
 ---
 
-## 5. Base de Datos
+## 5. Modelos de Dominio y Validación
 
-### 5.1 Motor y Conexión
+Los **modelos** (`src/models/`) son clases TypeScript simples (sin ORM) que representan las entidades del sistema. Tienen dos responsabilidades:
+
+1. **Validar** datos de entrada antes de persistirlos (método `static validate()`).
+2. **Proyectar** datos hacia el exterior con el mínimo de información necesaria (métodos `toPublic()`, `toProfile()`, etc.).
+
+### 5.1 Sistema de Validación
+
+La validación ocurre en **dos lugares** del sistema:
+
+```
+Request body (datos crudos del HTTP)
+        ↓
+  Controller extrae los datos
+        ↓
+  Service llama a Model.validate(datos)
+        ↓ ← si hay errores, lanza ValidationError (HTTP 400)
+  Service verifica reglas de negocio con DB
+        ↓ ← si hay conflictos, lanza HTTPError (HTTP 409/403/404)
+  DAO inserta datos válidos en PostgreSQL
+```
+
+**Lugar 1 — Modelos:** validan *formato y estructura* de los datos. No acceden a la base de datos.
+
+**Lugar 2 — Services:** validan *reglas de negocio* que requieren consultar la base de datos (unicidad de email, existencia de recursos, matrícula del usuario, etc.).
+
+### 5.2 Validaciones por Modelo
+
+#### `User.validate()`
+
+Valida los datos de registro de un nuevo usuario.
+
+```typescript
+User.validate({ username, email, password })
+```
+
+| Campo | Regla | Error |
+|---|---|---|
+| `username` | 3–50 caracteres | `'El username debe tener entre 3 y 50 caracteres.'` |
+| `email` | Formato válido (`x@x.x`) | `'El email no tiene un formato válido.'` |
+| `password` | Mínimo 8 caracteres | `'La contraseña debe tener al menos 8 caracteres.'` |
+
+#### `User.validateProfileImage()`
+
+Valida el archivo de foto de perfil.
+
+```typescript
+User.validateProfileImage({ mimetype, size })
+```
+
+| Campo | Regla | Error |
+|---|---|---|
+| `mimetype` | Solo `image/jpeg` o `image/jpg` | `'La foto de perfil solo acepta formato JPG/JPEG.'` |
+| `size` | Máximo 5 MB (5 × 1024 × 1024 bytes) | `'La foto de perfil no puede superar los 5 MB.'` |
+
+#### `Course.validate()`
+
+Valida los datos de creación o edición de un curso.
+
+```typescript
+Course.validate({ slug, title, difficulty? })
+```
+
+| Campo | Regla | Error |
+|---|---|---|
+| `slug` | Solo letras minúsculas, números y guiones (`/^[a-z0-9-]+$/`) | `'El slug solo puede contener letras minúsculas, números y guiones.'` |
+| `title` | 3–180 caracteres | `'El título debe tener entre 3 y 180 caracteres.'` |
+| `difficulty` | Uno de: `principiante`, `intermedio`, `avanzado` | `'La dificultad debe ser una de: principiante, intermedio, avanzado.'` |
+
+#### `CourseModule.validate()`
+
+Valida los datos de un módulo dentro de un curso.
+
+```typescript
+CourseModule.validate({ slug, title, position })
+```
+
+| Campo | Regla | Error |
+|---|---|---|
+| `slug` | Solo letras minúsculas, números y guiones | mismo que Course |
+| `title` | 3–180 caracteres | mismo que Course |
+| `position` | Entero mayor a 0 | `'La posición debe ser un entero mayor a 0.'` |
+
+#### `Laboratory.validate()`
+
+Valida los datos de un laboratorio dentro de un módulo.
+
+```typescript
+Laboratory.validate({ slug, title, contentMarkdown, position, estimatedMinutes, points })
+```
+
+| Campo | Regla | Error |
+|---|---|---|
+| `slug` | Solo letras minúsculas, números y guiones | mismo que Course |
+| `title` | 3–180 caracteres | mismo que Course |
+| `contentMarkdown` | No puede estar vacío | `'El contenido en markdown no puede estar vacío.'` |
+| `position` | Entero mayor a 0 | `'La posición debe ser un entero mayor a 0.'` |
+| `estimatedMinutes` | Entero mayor a 0 | `'El tiempo estimado debe ser un entero mayor a 0.'` |
+| `points` | Entero ≥ 0 | `'Los puntos deben ser un entero igual o mayor a 0.'` |
+
+#### `LaboratoryQuestion.validate()`
+
+Valida los datos de una pregunta de quiz.
+
+```typescript
+LaboratoryQuestion.validate({ questionOrder, questionType, questionText })
+```
+
+| Campo | Regla | Error |
+|---|---|---|
+| `questionOrder` | Entero entre 1 y 5 | `'El orden de pregunta debe estar entre 1 y 5.'` |
+| `questionType` | Uno de: `multiple_choice`, `activity_response` | `'El tipo de pregunta debe ser uno de: multiple_choice, activity_response.'` |
+| `questionText` | No puede estar vacío | `'El texto de la pregunta no puede estar vacío.'` |
+
+### 5.3 Validaciones de Negocio en Services
+
+Además del formato, los Services verifican reglas que requieren consultar la base de datos:
+
+| Service | Validación | Error HTTP |
+|---|---|---|
+| `AuthService.register` | Email no registrado previamente | 409 `'El email ya está registrado.'` |
+| `AuthService.register` | Username no tomado | 409 `'El username ya está en uso.'` |
+| `AuthService.login` | Usuario existe y contraseña coincide | 401 `'Credenciales inválidas.'` |
+| `SubmissionService.submit` | Laboratorio existe y está publicado | 404 `'Laboratorio no encontrado.'` |
+| `SubmissionService.submit` | Exactamente 5 respuestas enviadas | 400 `'Debes responder exactamente 5 preguntas.'` |
+| `SubmissionService.submit` | Usuario inscrito en el curso padre | 403 `'Debes estar inscrito en el curso para enviar este laboratorio.'` |
+| `SubmissionService.submit` | Cada `questionId` pertenece al lab | 400 `'La pregunta X no pertenece a este laboratorio.'` |
+| `CourseService.getLaboratory` | Usuario inscrito para ver el lab | 403 `'Debes estar matriculado'` |
+
+### 5.4 Proyecciones de Datos (Principio de Mínimo Privilegio)
+
+Cada modelo expone distintas "vistas" de sus datos para evitar exponer información sensible. El Service usa la proyección apropiada según el contexto:
+
+| Método | Datos expuestos | Usado en |
+|---|---|---|
+| `user.toSession()` | `id, username, email, role` | Payload del JWT |
+| `user.toPublic()` | `id, username, bio, points` | Perfil público (`/u/:username`) |
+| `user.toProfile()` | `id, username, email, bio, points, role, createdAt` | Propio perfil (`/users/me`) |
+| `user.toRankingRow()` | `id, username, bio, points` | Tabla de ranking |
+| `course.toPublic()` | `id, slug, title, description, difficulty` | Lista de cursos |
+| `course.toAdmin()` | Todos los campos incluyendo `isPublished`, `createdBy` | Panel admin |
+| `lab.toSummary()` | Sin `contentMarkdown` | Listado de labs en módulo |
+| `lab.toPublic()` | Con `contentMarkdown` | Vista completa del lab |
+| `question.toQuiz()` | Sin `explanation` | Durante el quiz activo |
+| `question.toResult()` | Con `explanation` | Retroalimentación post-submission |
+
+---
+
+## 6. Base de Datos
+
+### 6.1 Motor y Conexión
 
 Se usa **PostgreSQL** (alojado en Supabase). La conexión se configura en `src/db/index.ts`:
 
@@ -209,7 +382,7 @@ const sql = postgres(process.env.DATABASE_URL, {
 
 > **Nota sobre `prepare: false`:** Supabase usa un *connection pooler* (PgBouncer) que no soporta *prepared statements*. Por eso se desactiva esta optimización.
 
-### 5.2 Jerarquía de Contenido
+### 6.2 Jerarquía de Contenido
 
 ```
 courses
@@ -220,7 +393,7 @@ courses
                     └── question_activities  (actividad práctica, relación 1:1)
 ```
 
-### 5.3 Tablas Principales
+### 6.3 Tablas Principales
 
 #### `users`
 Almacena todos los usuarios de la plataforma.
@@ -291,7 +464,7 @@ Estado del usuario en cada actividad práctica.
 #### `activity_action_logs`
 Registro de cada intento de actividad. Es un log inmutable (sin `UPDATE`).
 
-### 5.4 Triggers de la Base de Datos
+### 6.4 Triggers de la Base de Datos
 
 Los **triggers** son funciones que PostgreSQL ejecuta automáticamente cuando ocurre cierto evento (INSERT, UPDATE, DELETE) en una tabla. Se usan para mantener datos derivados sincronizados sin que el código del servidor tenga que preocuparse.
 
@@ -320,9 +493,9 @@ Trigger 4: trg_award_laboratory_points
 
 ---
 
-## 6. Autenticación y Autorización
+## 7. Autenticación y Autorización
 
-### 6.1 JWT — JSON Web Token
+### 7.1 JWT — JSON Web Token
 
 La autenticación funciona con **tokens JWT**. Un JWT es como un "pase de acceso" que el servidor le entrega al usuario cuando inicia sesión. En cada petición posterior, el usuario adjunta ese pase y el servidor puede verificar su identidad sin consultar la base de datos.
 
@@ -350,7 +523,22 @@ Firma:   HMAC-SHA256(header + payload, JWT_SECRET)
 
 El token expira después de **7 días**. Si un usuario tiene el token de otra persona, no puede forjarlo porque no conoce el `JWT_SECRET` con el que fue firmado.
 
-### 6.2 Middleware de Autenticación
+### 7.2 Reset de Contraseña
+
+Los tokens de restablecimiento de contraseña se almacenan **en memoria** (no en la base de datos):
+
+```typescript
+// En AuthController:
+const resetTokens = new Map<string, { userId: string; expiresAt: number }>()
+```
+
+- El token es un UUID aleatorio (`crypto.randomUUID()`).
+- Expira en **1 hora** (`Date.now() + 3_600_000`).
+- Al reiniciar el servidor, todos los tokens pendientes se pierden.
+- En producción, el token se imprime en consola (TODO: enviar por email).
+- Se usa la misma respuesta para correos registrados y no registrados, evitando *email enumeration*.
+
+### 7.3 Middleware de Autenticación
 
 En `src/middleware/auth.ts` hay tres funciones que actúan como "porteros":
 
@@ -371,11 +559,11 @@ Cuando el middleware aprueba la petición, guarda los datos del usuario en el **
 
 ---
 
-## 7. Endpoints de la API
+## 8. Endpoints de la API
 
 Todos los endpoints comienzan con el prefijo `/api`.
 
-### 7.1 Autenticación (`/api/auth`)
+### 8.1 Autenticación (`/api/auth`)
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
@@ -398,7 +586,7 @@ Todos los endpoints comienzan con el prefijo `/api`.
 }
 ```
 
-### 7.2 Usuarios (`/api/users`)
+### 8.2 Usuarios (`/api/users`)
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
@@ -408,7 +596,7 @@ Todos los endpoints comienzan con el prefijo `/api`.
 | POST | `/me/avatar` | ✅ | Subir foto de perfil (JPG, máx 5 MB) |
 | GET | `/:username` | ❌ | Ver perfil público de cualquier usuario |
 
-### 7.3 Cursos (`/api/courses`)
+### 8.3 Cursos (`/api/courses`)
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
@@ -437,7 +625,7 @@ Todos los endpoints comienzan con el prefijo `/api`.
 ]
 ```
 
-### 7.4 Actividades (`/api/activities`)
+### 8.4 Actividades (`/api/activities`)
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
@@ -455,7 +643,7 @@ El body es un JSON libre que representa la acción del usuario. El servidor lo c
 }
 ```
 
-### 7.5 Envío de Quizzes (`/api/labs`)
+### 8.5 Envío de Quizzes (`/api/labs`)
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
@@ -481,11 +669,12 @@ El body es un JSON libre que representa la acción del usuario. El servidor lo c
   "attemptNumber": 2,
   "correctAnswersCount": 4,
   "totalQuestions": 5,
-  "scorePercent": 80
+  "scorePercent": 80,
+  "pointsEarned": 150
 }
 ```
 
-### 7.6 Estadísticas Públicas (`/api/stats`)
+### 8.6 Estadísticas Públicas (`/api/stats`)
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
@@ -501,7 +690,7 @@ El body es un JSON libre que representa la acción del usuario. El servidor lo c
 }
 ```
 
-### 7.7 Ranking (`/api/ranking`)
+### 8.7 Ranking (`/api/ranking`)
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
@@ -521,7 +710,7 @@ El body es un JSON libre que representa la acción del usuario. El servidor lo c
 }
 ```
 
-### 7.8 Admin (`/api/admin`) — Solo para rol `admin`
+### 8.8 Admin (`/api/admin`) — Solo para rol `admin`
 
 Todos estos endpoints requieren token de administrador.
 
@@ -541,9 +730,9 @@ Todos estos endpoints requieren token de administrador.
 
 ---
 
-## 8. Lógica de Negocio Clave
+## 9. Lógica de Negocio Clave
 
-### 8.1 Sistema de Actividades Prácticas
+### 9.1 Sistema de Actividades Prácticas
 
 Las preguntas de tipo `activity_response` requieren que el usuario "complete una tarea" (por ejemplo, ejecutar un comando específico en una terminal web). El flujo es:
 
@@ -576,47 +765,49 @@ El hash es siempre el mismo para la misma combinación de usuario y actividad (g
 - Si el usuario recarga la página y vuelve a intentar la actividad, recibirá el mismo código.
 - El código no puede ser adivinado ni compartido entre usuarios (cada uno tiene un código diferente).
 
-### 8.2 Calificación del Quiz
+### 9.2 Calificación del Quiz
 
 ```typescript
 // En SubmissionService:
 let correctCount = 0;
 
 for (const answer of answers) {
-  const question = preguntas.find(q => q.id === answer.questionId);
+  const question = questions.find(q => q.id === answer.questionId)!
 
   if (question.questionType === 'multiple_choice') {
-    const option = await optionDAO.findById(answer.selectedOptionId);
-    if (option.isCorrect) correctCount++;
+    const option = await optionDAO.findById(answer.selectedOptionId)
+    if (option?.questionId === question.id && option.isCorrect) correctCount++
 
-  } else if (question.questionType === 'activity_response') {
-    const progress = await activityProgressDAO.find(userId, activityId);
-    if (progress?.generatedResponse === answer.responseText) correctCount++;
+  } else {
+    // activity_response: correcto solo si coincide con el hash del propio usuario
+    const activity = await activityDAO.findByQuestionId(question.id)
+    const progress = await activityProgressDAO.find(userId, activity.id)
+    if (progress?.generatedResponse === answer.responseText.trim()) correctCount++
   }
 }
 
-const scorePercent = (correctCount / 5) * 100;
+const scorePercent = (correctCount / 5) * 100
 // Posibles valores: 0, 20, 40, 60, 80, 100
 ```
 
-### 8.3 Sistema de Puntos
+### 9.3 Sistema de Puntos
 
-Los puntos se otorgan **una sola vez** por laboratorio, al completarlo por primera vez. El puntaje del quiz no importa para recibir los puntos (solo importa haber enviado el quiz al menos una vez con cualquier nota).
-
-El flujo exacto es:
+Los puntos se otorgan **una sola vez** por laboratorio, y solo si el usuario supera el umbral mínimo de aprobación. El flujo exacto es:
 
 ```
 1. Usuario envía quiz → se inserta en submissions
 2. Trigger actualiza user_laboratory_progress
 3. Si status cambia a 'completed' por primera vez:
    UPDATE users SET points = points + laboratories.points WHERE id = userId
+
+En el Service, pointsEarned se calcula como:
+  const passed = scorePercent >= 60   // ← umbral de aprobación: 60%
+  const pointsEarned = passed && !wasAlreadyCompleted ? lab.points : 0
 ```
 
-Este mecanismo vive completamente en la base de datos (trigger SQL), garantizando que no importa desde dónde se haga el insert, los puntos siempre se otorgan correctamente.
+> **Nota:** Se necesita al menos **60% de aciertos** (3 de 5 preguntas) para que el submission cuente como aprobado y se otorguen los puntos. El usuario puede seguir intentando hasta pasar, y siempre se guarda el mejor puntaje (`best_score_percent`).
 
-> **¿Qué pasa si el usuario envía el quiz varias veces?** Puede hacerlo, cada intento guarda el puntaje, y `best_score_percent` en `user_laboratory_progress` siempre refleja el mejor intento. Pero los puntos solo se suman la primera vez que el status llega a `completed`.
-
-### 8.4 Control de Acceso a Laboratorios
+### 9.4 Control de Acceso a Laboratorios
 
 Para ver el contenido completo de un laboratorio (incluyendo preguntas), el usuario debe estar **matriculado** en el curso padre. El proceso es:
 
@@ -636,9 +827,9 @@ Los administradores saltan este control (para poder revisar el contenido sin mat
 
 ---
 
-## 9. Manejo de Errores
+## 10. Manejo de Errores
 
-### 9.1 Clases de Error
+### 10.1 Clases de Error
 
 En `src/utils/errors.ts` hay dos clases:
 
@@ -654,7 +845,7 @@ class ValidationError extends HTTPError {
 }
 ```
 
-### 9.2 Manejador Global de Errores
+### 10.2 Manejador Global de Errores
 
 En `src/index.ts` hay un manejador global que captura cualquier error lanzado en cualquier parte de la aplicación:
 
@@ -669,7 +860,7 @@ app.onError((err, c) => {
 });
 ```
 
-### 9.3 Formato de Respuestas de Error
+### 10.3 Formato de Respuestas de Error
 
 Todos los errores tienen el mismo formato JSON:
 
@@ -681,16 +872,16 @@ Todos los errores tienen el mismo formato JSON:
 
 | Código | Significado | Ejemplo |
 |---|---|---|
-| 400 | Bad Request — datos inválidos | Username muy corto |
-| 401 | Unauthorized — token inválido o ausente | Sin token en header |
-| 403 | Forbidden — no tiene permisos | Usuario normal en ruta admin |
+| 400 | Bad Request — datos inválidos | Username muy corto, menos de 5 respuestas |
+| 401 | Unauthorized — token inválido o ausente | Sin token en header, credenciales incorrectas |
+| 403 | Forbidden — no tiene permisos | Usuario normal en ruta admin, sin matrícula |
 | 404 | Not Found — recurso no existe | Curso con ese slug no existe |
-| 409 | Conflict — ya existe | Email ya registrado |
+| 409 | Conflict — ya existe | Email ya registrado, username ya en uso |
 | 500 | Internal Server Error | Error inesperado en el servidor |
 
 ---
 
-## 10. Variables de Entorno
+## 11. Variables de Entorno
 
 El backend necesita las siguientes variables en el archivo `.env` (o en Railway):
 
@@ -710,9 +901,9 @@ postgresql://postgres.[ref]:[password]@aws-0-us-east-1.pooler.supabase.com:6543/
 
 ---
 
-## 11. Despliegue
+## 12. Despliegue
 
-### 11.1 Base de Datos — Supabase
+### 12.1 Base de Datos — Supabase
 
 1. Crear un proyecto en [supabase.com](https://supabase.com).
 2. Ir al **SQL Editor** y ejecutar el contenido de `backend/database/schema.sql`.
@@ -720,7 +911,7 @@ postgresql://postgres.[ref]:[password]@aws-0-us-east-1.pooler.supabase.com:6543/
 
 El schema es **idempotente**: usa `CREATE TABLE IF NOT EXISTS`, `CREATE TYPE IF NOT EXISTS`, etc. Se puede ejecutar múltiples veces sin error.
 
-### 11.2 Backend — Railway
+### 12.2 Backend — Railway
 
 La configuración de despliegue está en `backend/railway.json`:
 
@@ -745,13 +936,13 @@ La configuración de despliegue está en `backend/railway.json`:
 
 > **RAILPACK** es el builder de Railway que detecta el runtime (Bun en este caso) y construye una imagen optimizada. Es más rápido y liviano que Nixpacks.
 
-### 11.3 Frontend — Vercel / Netlify
+### 12.3 Frontend — Vercel / Netlify
 
 El frontend es estático (React compilado). Solo se necesita:
 1. Configurar la variable de entorno `VITE_API_URL` con la URL del backend de Railway.
 2. Apuntar el proveedor (Vercel, Netlify) a la carpeta `frontend/`.
 
-### 11.4 Diagrama de Infraestructura
+### 12.4 Diagrama de Infraestructura
 
 ```
 ┌──────────────────┐     HTTPS      ┌──────────────────┐
@@ -769,7 +960,7 @@ El frontend es estático (React compilado). Solo se necesita:
 
 ---
 
-## 12. Glosario de Términos
+## 13. Glosario de Términos
 
 **API REST** — Interfaz de comunicación entre aplicaciones basada en HTTP. El frontend hace peticiones a URLs específicas del backend y recibe respuestas JSON.
 
@@ -781,11 +972,13 @@ El frontend es estático (React compilado). Solo se necesita:
 
 **Connection Pooler** — Componente que reutiliza conexiones abiertas a la base de datos. Supabase usa PgBouncer: en vez de abrir una conexión nueva por cada petición, las reutiliza de un "pool" (pileta de conexiones).
 
-**CORS** — *Cross-Origin Resource Sharing*. Política de seguridad del navegador que bloquea peticiones de un dominio a otro. El backend configura qué orígenes (dominios) tienen permiso de hacer peticiones, en este caso solo el dominio del frontend.
+**CORS** — *Cross-Origin Resource Sharing*. Política de seguridad del navegador que bloquea peticiones de un dominio a otro. El backend configura qué orígenes tienen permiso, en este caso solo el dominio del frontend.
 
 **DAO** — *Data Access Object*. Objeto cuya única responsabilidad es acceder a la base de datos. Encapsula todas las consultas SQL de una entidad específica.
 
 **Determinístico** — Un proceso que, dado los mismos inputs, siempre produce el mismo output. El generador de hashes para actividades es determinístico: mismo usuario + misma actividad = siempre el mismo hash.
+
+**Email Enumeration** — Ataque donde se descubre si un email está registrado probando la respuesta del servidor. El endpoint de forgot-password siempre responde igual para evitarlo.
 
 **Enum** — Tipo de dato con un conjunto fijo de valores posibles. En PostgreSQL: `CREATE TYPE user_role AS ENUM ('user', 'admin')`.
 
@@ -797,23 +990,25 @@ El frontend es estático (React compilado). Solo se necesita:
 
 **Hono** — Framework web ultra-ligero para TypeScript. Define rutas con `app.get('/ruta', handler)`, aplica middleware, y gestiona peticiones HTTP.
 
-**Idempotente** — Una operación que puede ejecutarse múltiples veces sin efectos secundarios adicionales. `CREATE TABLE IF NOT EXISTS` es idempotente: si la tabla ya existe, no hace nada.
+**Idempotente** — Una operación que puede ejecutarse múltiples veces sin efectos secundarios adicionales. `CREATE TABLE IF NOT EXISTS` es idempotente.
 
-**JSONB** — Tipo de dato de PostgreSQL para almacenar JSON de forma binaria. Permite búsquedas e índices sobre el contenido JSON, a diferencia del tipo `JSON` que lo guarda como texto.
+**JSONB** — Tipo de dato de PostgreSQL para almacenar JSON de forma binaria. Permite búsquedas e índices sobre el contenido JSON.
 
 **JWT** — *JSON Web Token*. Estándar para transmitir información de forma segura entre partes como un string compacto. Tiene tres partes separadas por puntos: `header.payload.signature`.
 
 **Middleware** — Función que se ejecuta "en el medio" entre que llega una petición HTTP y llega al handler final. Puede rechazar la petición, modificarla, o pasarla al siguiente paso.
 
-**Migración** — Script SQL que modifica la estructura de la base de datos (agregar columnas, tablas, índices). En este proyecto el `schema.sql` funciona como una migración inicial.
+**Modelo de Dominio** — Clase TypeScript que representa una entidad del sistema (User, Course, Laboratory, etc.). Contiene validación de datos y métodos para proyectar solo la información necesaria según el contexto.
 
 **ORM** — *Object-Relational Mapper*. Librería que traduce entre objetos JavaScript y tablas de base de datos. En este proyecto se **usan consultas SQL crudas** en los DAOs en vez de un ORM, para mayor control.
 
-**PostgreSQL** — Sistema de gestión de bases de datos relacional de código abierto. Muy robusto, soporta JSONB, triggers, extensiones y más.
+**PostgreSQL** — Sistema de gestión de bases de datos relacional de código abierto.
 
-**Railway** — Plataforma de despliegue en la nube ("Platform as a Service"). Conecta con GitHub, detecta el lenguaje y despliega automáticamente.
+**Proyección** — Método de un modelo que devuelve solo un subconjunto de sus campos. Principio de mínimo privilegio: cada respuesta expone solo lo necesario (`toPublic`, `toProfile`, `toAdmin`, etc.).
 
-**RAILPACK** — Builder de Railway que analiza el proyecto y construye una imagen Docker optimizada para el runtime detectado (Bun, Node, Python, etc.).
+**Railway** — Plataforma de despliegue en la nube. Conecta con GitHub, detecta el lenguaje y despliega automáticamente.
+
+**RAILPACK** — Builder de Railway que analiza el proyecto y construye una imagen Docker optimizada para el runtime detectado.
 
 **Slug** — Versión de un título optimizada para URLs. Sin espacios, sin caracteres especiales, todo en minúsculas. Ejemplo: "Introducción a Linux" → `introduccion-a-linux`.
 
@@ -821,12 +1016,12 @@ El frontend es estático (React compilado). Solo se necesita:
 
 **Soft Delete** — Patrón donde en vez de eliminar un registro físicamente, se marca con una fecha de eliminación. Permite recuperar datos y mantiene la integridad referencial.
 
-**Supabase** — Plataforma de backend como servicio basada en PostgreSQL. Provee base de datos, autenticación, y más. En este proyecto solo se usa como host de PostgreSQL.
+**Supabase** — Plataforma de backend como servicio basada en PostgreSQL. En este proyecto solo se usa como host de PostgreSQL.
 
-**Trigger** — Función que PostgreSQL ejecuta automáticamente en respuesta a eventos en una tabla (INSERT, UPDATE, DELETE). Son parte de la lógica de negocio que vive en la base de datos.
+**Trigger** — Función que PostgreSQL ejecuta automáticamente en respuesta a eventos en una tabla (INSERT, UPDATE, DELETE).
 
-**TypeScript** — Superset de JavaScript que añade tipos estáticos. El código TypeScript se "compila" (verifica) antes de ejecutarse, reduciendo errores en tiempo de ejecución.
+**TypeScript** — Superset de JavaScript que añade tipos estáticos. El código TypeScript se verifica antes de ejecutarse, reduciendo errores en tiempo de ejecución.
 
-**UUID** — *Universally Unique Identifier*. Identificador de 128 bits generado aleatoriamente. Formato: `550e8400-e29b-41d4-a716-446655440000`. Se usa como clave primaria en vez de números enteros para mayor seguridad y escalabilidad.
+**UUID** — *Universally Unique Identifier*. Identificador de 128 bits generado aleatoriamente. Se usa como clave primaria en vez de números enteros para mayor seguridad y escalabilidad.
 
-**Validación** — Proceso de verificar que los datos de entrada cumplen las reglas esperadas antes de procesarlos. Los Services validan antes de llamar a los DAOs.
+**ValidationError** — Clase de error personalizada (HTTP 400) que acepta un array de mensajes en español. Se lanza cuando los datos de entrada no pasan la validación del modelo.
