@@ -57,8 +57,8 @@ export async function sendPasswordResetEmail(to: string, resetLink: string): Pro
     html,
   ].join('\r\n')
 
-  // Gmail API requires URL-safe base64
-  const encoded = btoa(unescape(encodeURIComponent(mime)))
+  const encoded = Buffer.from(mime, 'utf-8')
+    .toString('base64')
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '')
