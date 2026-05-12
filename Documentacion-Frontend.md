@@ -198,6 +198,8 @@ Tabla de clasificación paginada. Muestra posición, avatar, username, puntos y 
 
 Layout centrado utilizado por las páginas de autenticación (Login, Register, ForgotPassword, ResetPassword). Mantiene la consistencia visual sin el Header/Footer principal.
 
+El panel izquierdo (visible solo en pantallas `lg+`) muestra estadísticas reales de la plataforma (cursos, labs, puntos totales) obtenidas desde `/api/stats` al montar el componente. Mientras carga, muestra `—` como placeholder.
+
 ### `EnrollConfirmModal`
 
 Modal de confirmación antes de matricularse en un curso. Muestra el nombre del curso y los puntos que se pueden ganar.
@@ -530,6 +532,18 @@ Configuración del proyecto en Vercel:
 - **Framework Preset**: Vite
 - **Build Command**: `bun run build`
 - **Output Directory**: `dist`
+
+### Enrutamiento SPA en Vercel
+
+El archivo `frontend/vercel.json` es obligatorio para que React Router funcione correctamente en producción:
+
+```json
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
+```
+
+Sin este archivo, Vercel devuelve 404 al acceder directamente a rutas como `/dashboard`, `/reset-password` o `/login`, porque intenta buscar archivos estáticos en esas rutas y no los encuentra. El rewrite redirige todo al `index.html` y React Router se encarga del resto.
 
 Variables de entorno configuradas en Vercel:
 ```

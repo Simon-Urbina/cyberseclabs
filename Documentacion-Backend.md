@@ -535,7 +535,7 @@ const resetTokens = new Map<string, { userId: string; expiresAt: number }>()
 - El token es un UUID aleatorio (`crypto.randomUUID()`).
 - Expira en **1 hora** (`Date.now() + 3_600_000`).
 - Al reiniciar el servidor, todos los tokens pendientes se pierden.
-- El enlace de reset (`${FRONTEND_URL}/reset-password?token=...`) se envía por correo usando **Nodemailer con Gmail SMTP** (`src/utils/email.ts`).
+- El enlace de reset (`${FRONTEND_URL}/reset-password?token=...`) se envía por correo usando la **Gmail REST API con OAuth2** (`src/utils/email.ts`). No usa SMTP — usa HTTPS directamente, lo que es compatible con plataformas cloud como Railway que bloquean puertos SMTP.
 - Se usa la misma respuesta para correos registrados y no registrados, evitando *email enumeration*.
 
 ### 7.3 Middleware de Autenticación
@@ -892,7 +892,11 @@ El backend necesita las siguientes variables en el archivo `.env` (o en Railway)
 | `PORT` | ❌ | Puerto donde escucha el servidor. Railway lo inyecta automáticamente. |
 | `FRONTEND_URL` | ❌ | URL(s) del frontend para CORS (comma-separated). Default: `http://localhost:5173` |
 | `GMAIL_USER` | ✅ | Correo Gmail desde el que se envían los emails de recuperación de contraseña. |
-| `GMAIL_APP_PASSWORD` | ✅ | App Password de 16 caracteres generado en la cuenta de Google (no es la contraseña normal). |
+| `GMAIL_CLIENT_ID` | ✅ | ID de cliente OAuth2 de Google Cloud Console (tipo "Aplicación web"). |
+| `GMAIL_CLIENT_SECRET` | ✅ | Secreto del cliente OAuth2. |
+| `GMAIL_REFRESH_TOKEN` | ✅ | Refresh token obtenido via OAuth2 Playground con scope `https://mail.google.com/`. No expira a menos que se revoque manualmente. |
+
+> **Por qué OAuth2 y no SMTP:** Railway bloquea los puertos SMTP salientes (25, 465, 587) para prevenir spam. La Gmail REST API usa HTTPS (puerto 443) que sí está disponible. Nodemailer con `service: 'gmail'` falla con `ETIMEDOUT` en Railway.
 
 **Ejemplo de `DATABASE_URL` de Supabase:**
 ```

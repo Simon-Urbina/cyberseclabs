@@ -9,7 +9,7 @@ Plataforma de aprendizaje en ciberseguridad donde los usuarios se inscriben en c
 | Runtime | [Bun](https://bun.sh/) |
 | Frontend | React 19 + TypeScript + Vite + Tailwind CSS v4 |
 | Backend | Hono 4 |
-| Email | Nodemailer + Gmail SMTP |
+| Email | Gmail API (OAuth2 via HTTP) |
 | Chatbot | FastAPI + Python + Groq (llama-3.3-70b-versatile) |
 | Base de datos | PostgreSQL en [Supabase](https://supabase.com/) |
 | Despliegue backend | [Railway](https://railway.app/) |
@@ -83,7 +83,9 @@ JWT_SECRET=tu_secreto_muy_seguro
 PORT=3000
 FRONTEND_URL=http://localhost:5173
 GMAIL_USER=tucorreo@gmail.com
-GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
+GMAIL_CLIENT_ID=xxxxx.apps.googleusercontent.com
+GMAIL_CLIENT_SECRET=GOCSPX-xxxxx
+GMAIL_REFRESH_TOKEN=1//xxxxxxxxxxxxxxxxx
 ```
 
 **`chatbot/.env`**
@@ -312,8 +314,12 @@ JWT_SECRET
 PORT
 FRONTEND_URL=https://cyberseclabs.vercel.app
 GMAIL_USER
-GMAIL_APP_PASSWORD
+GMAIL_CLIENT_ID
+GMAIL_CLIENT_SECRET
+GMAIL_REFRESH_TOKEN
 ```
+
+> El email usa la Gmail REST API (OAuth2), no SMTP. Railway bloquea los puertos SMTP salientes, por lo que nodemailer con Gmail SMTP no funciona en este entorno.
 
 Configuración en `backend/railway.json`.
 
@@ -337,3 +343,5 @@ Variables de entorno requeridas:
 VITE_API_URL=https://tu-backend.up.railway.app
 VITE_CHATBOT_URL=https://tu-chatbot.up.railway.app
 ```
+
+El archivo `frontend/vercel.json` configura el enrutamiento SPA — todas las rutas se redirigen a `index.html` para que React Router funcione correctamente al acceder directamente a una URL (ej: `/reset-password`, `/dashboard`).
