@@ -34,7 +34,11 @@ export class AuthController {
       resetTokens.set(token, { userId: user.id, expiresAt: Date.now() + 3_600_000 })
       const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173'
       const resetLink = `${frontendUrl}/reset-password?token=${token}`
-      await sendPasswordResetEmail(user.email, resetLink)
+      try {
+        await sendPasswordResetEmail(user.email, resetLink)
+      } catch (err) {
+        console.error('[forgot-password] Error enviando email:', err)
+      }
     }
     // Always return same message to avoid email enumeration
     return c.json({ message: 'Si el correo está registrado, recibirás las instrucciones.' })
