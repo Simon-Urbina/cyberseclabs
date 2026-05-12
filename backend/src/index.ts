@@ -12,10 +12,18 @@ import statsRoutes from './routes/stats.js'
 
 const app = new Hono()
 
+const allowedOrigins = (process.env.FRONTEND_URL ?? 'http://localhost:5173')
+  .split(',')
+  .map((s) => s.trim())
+
 app.use(
   '*',
   cors({
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+    origin: (origin) => {
+      if (allowedOrigins.includes(origin)) return origin
+      if (/^https:\/\/cyberseclabs[^.]*\.vercel\.app$/.test(origin)) return origin
+      return null
+    },
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
   }),
