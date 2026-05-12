@@ -1,9 +1,9 @@
 import type { Context } from 'hono'
 import { AuthService } from '../services/AuthService.js'
 import { UserDAO } from '../daos/UserDAO.js'
+import { sendPasswordResetEmail } from '../utils/email.js'
 
 // In-memory reset tokens (key → {userId, expiresAt}). Resets on server restart.
-// Configure email service to send the token link in production.
 const resetTokens = new Map<string, { userId: string; expiresAt: number }>()
 
 export class AuthController {
@@ -32,8 +32,9 @@ export class AuthController {
     if (user) {
       const token = crypto.randomUUID()
       resetTokens.set(token, { userId: user.id, expiresAt: Date.now() + 3_600_000 })
-      // TODO: send email with reset link. Token logged to console for development:
-      console.log(`[RESET] ${email} → token: ${token}`)
+      const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173'
+      const resetLink = `${frontendUrl}/reset-password?token=${token}`
+      await sendPasswordResetEmail(user.email, resetLink)
     }
     // Always return same message to avoid email enumeration
     return c.json({ message: 'Si el correo está registrado, recibirás las instrucciones.' })
