@@ -46,7 +46,12 @@ const STACK = [
   { name: 'Bun', category: 'Backend' },
   { name: 'PostgreSQL', category: 'Backend' },
   { name: 'Supabase', category: 'Backend' },
+  { name: 'Nodemailer', category: 'Backend' },
   { name: 'Railway', category: 'Infra' },
+  { name: 'Vercel', category: 'Infra' },
+  { name: 'FastAPI', category: 'IA' },
+  { name: 'Python', category: 'IA' },
+  { name: 'Groq', category: 'IA' },
 ]
 
 const SOCIAL = [
@@ -100,6 +105,7 @@ const CATEGORY_COLOR: Record<string, string> = {
   Frontend: '#2596be',
   Backend: '#1A3F96',
   Infra: '#F5C500',
+  IA: '#a855f7',
 }
 
 export default function AboutPage() {

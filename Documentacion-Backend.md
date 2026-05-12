@@ -535,7 +535,7 @@ const resetTokens = new Map<string, { userId: string; expiresAt: number }>()
 - El token es un UUID aleatorio (`crypto.randomUUID()`).
 - Expira en **1 hora** (`Date.now() + 3_600_000`).
 - Al reiniciar el servidor, todos los tokens pendientes se pierden.
-- En producción, el token se imprime en consola (TODO: enviar por email).
+- El enlace de reset (`${FRONTEND_URL}/reset-password?token=...`) se envía por correo usando **Nodemailer con Gmail SMTP** (`src/utils/email.ts`).
 - Se usa la misma respuesta para correos registrados y no registrados, evitando *email enumeration*.
 
 ### 7.3 Middleware de Autenticación
@@ -890,7 +890,9 @@ El backend necesita las siguientes variables en el archivo `.env` (o en Railway)
 | `DATABASE_URL` | ✅ | URL de conexión a PostgreSQL de Supabase |
 | `JWT_SECRET` | ✅ | Clave secreta para firmar y verificar tokens JWT. Debe ser larga y aleatoria. |
 | `PORT` | ❌ | Puerto donde escucha el servidor. Railway lo inyecta automáticamente. |
-| `FRONTEND_URL` | ❌ | URL del frontend para la política CORS. Default: `http://localhost:5173` |
+| `FRONTEND_URL` | ❌ | URL(s) del frontend para CORS (comma-separated). Default: `http://localhost:5173` |
+| `GMAIL_USER` | ✅ | Correo Gmail desde el que se envían los emails de recuperación de contraseña. |
+| `GMAIL_APP_PASSWORD` | ✅ | App Password de 16 caracteres generado en la cuenta de Google (no es la contraseña normal). |
 
 **Ejemplo de `DATABASE_URL` de Supabase:**
 ```
@@ -936,26 +938,33 @@ La configuración de despliegue está en `backend/railway.json`:
 
 > **RAILPACK** es el builder de Railway que detecta el runtime (Bun en este caso) y construye una imagen optimizada. Es más rápido y liviano que Nixpacks.
 
-### 12.3 Frontend — Vercel / Netlify
+### 12.3 Frontend — Vercel
 
-El frontend es estático (React compilado). Solo se necesita:
-1. Configurar la variable de entorno `VITE_API_URL` con la URL del backend de Railway.
-2. Apuntar el proveedor (Vercel, Netlify) a la carpeta `frontend/`.
+El frontend es estático (React compilado). Se despliega conectando el repositorio en Vercel:
+1. **Root Directory**: `frontend`
+2. **Framework Preset**: Vite
+3. Variables de entorno: `VITE_API_URL` y `VITE_CHATBOT_URL` con las URLs de Railway.
+
+Vercel genera automáticamente una URL de producción (`cyberseclabs.vercel.app`) y URLs de preview por cada deploy.
 
 ### 12.4 Diagrama de Infraestructura
 
 ```
 ┌──────────────────┐     HTTPS      ┌──────────────────┐
-│    Vercel /      │ ─────────────► │    Railway       │
-│    Netlify       │                │    (Bun + Hono)  │
-│  (React Frontend)│ ◄──────────── │    Backend       │
-└──────────────────┘                └────────┬─────────┘
-                                             │ SSL/PostgreSQL
-                                             ▼
-                                    ┌──────────────────┐
-                                    │    Supabase      │
-                                    │   PostgreSQL     │
-                                    └──────────────────┘
+│    Vercel        │ ─────────────► │    Railway       │
+│  (React Frontend)│                │    (Bun + Hono)  │
+│                  │ ◄──────────── │    Backend       │
+└────────┬─────────┘                └────────┬─────────┘
+         │                                   │ SSL/PostgreSQL
+         │ HTTPS (SSE)                       ▼
+         │                          ┌──────────────────┐
+         │                          │    Supabase      │
+         ▼                          │   PostgreSQL     │
+┌──────────────────┐                └──────────────────┘
+│    Railway       │
+│  (FastAPI+Python)│
+│  Chatbot (Groq)  │
+└──────────────────┘
 ```
 
 ---

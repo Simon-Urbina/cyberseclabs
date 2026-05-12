@@ -9,9 +9,12 @@ Plataforma de aprendizaje en ciberseguridad donde los usuarios se inscriben en c
 | Runtime | [Bun](https://bun.sh/) |
 | Frontend | React 19 + TypeScript + Vite + Tailwind CSS v4 |
 | Backend | Hono 4 |
+| Email | Nodemailer + Gmail SMTP |
+| Chatbot | FastAPI + Python + Groq (llama-3.3-70b-versatile) |
 | Base de datos | PostgreSQL en [Supabase](https://supabase.com/) |
-| Despliegue backend | Railway |
-| Despliegue frontend | Cualquier host estático (Vercel, Netlify, etc.) |
+| Despliegue backend | [Railway](https://railway.app/) |
+| Despliegue frontend | [Vercel](https://vercel.com/) |
+| Despliegue chatbot | [Railway](https://railway.app/) |
 
 ---
 
@@ -32,12 +35,20 @@ cybersec-labs/
 │       ├── services/            # Lógica de negocio
 │       ├── controllers/         # Manejo request/response
 │       ├── routes/              # Definición de rutas Hono
-│       └── utils/               # errors.ts, response.ts
+│       └── utils/               # errors.ts, response.ts, email.ts
+├── chatbot/
+│   ├── main.py                  # FastAPI — endpoint /chat/stream (SSE)
+│   ├── config.py                # Cliente Groq (openai-compatible)
+│   ├── prompts.py               # System prompt con contexto de página
+│   ├── retriever.py             # RAG con TF-IDF sobre knowledge.json
+│   ├── knowledge.json           # Base de conocimiento de la plataforma
+│   ├── requirements.txt         # Dependencias Python
+│   └── railway.json             # Configuración de despliegue en Railway
 └── frontend/
     └── src/
         ├── context/             # AuthContext, ThemeContext
         ├── lib/                 # api.ts — cliente HTTP centralizado
-        ├── components/          # Header, Footer, CourseCard, Ranking, modals…
+        ├── components/          # Header, Footer, CourseCard, Ranking, ChatWidget, modals…
         └── pages/               # Landing, Login, Register, ForgotPassword, ResetPassword,
                                  # Dashboard, CoursePage, LabPage, PublicProfilePage, AboutPage, NotFoundPage
 ```
@@ -71,11 +82,19 @@ DATABASE_URL=postgresql://user:password@host:5432/dbname
 JWT_SECRET=tu_secreto_muy_seguro
 PORT=3000
 FRONTEND_URL=http://localhost:5173
+GMAIL_USER=tucorreo@gmail.com
+GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
+```
+
+**`chatbot/.env`**
+```env
+GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 **`frontend/.env`**
 ```env
 VITE_API_URL=http://localhost:3000
+VITE_CHATBOT_URL=http://localhost:8002
 ```
 
 ### 3. Inicializar la base de datos
@@ -280,28 +299,41 @@ Jerarquía principal: `courses → course_modules → laboratories → laborator
 
 ## Despliegue
 
-### Backend — Railway
-
-Variables de entorno requeridas en Railway:
-```
-DATABASE_URL
-JWT_SECRET
-PORT
-FRONTEND_URL
-```
-
-Configuración en `backend/railway.json`.
-
 ### Base de datos — Supabase
 
 Ejecutar `backend/database/schema.sql` en el Editor SQL de Supabase.
 
-### Frontend — host estático
+### Backend — Railway
 
-Configurar `VITE_API_URL` apuntando al backend de Railway antes de hacer el build:
-
-```bash
-VITE_API_URL=https://tu-backend.railway.app bun run build
+Variables de entorno requeridas:
+```
+DATABASE_URL
+JWT_SECRET
+PORT
+FRONTEND_URL=https://cyberseclabs.vercel.app
+GMAIL_USER
+GMAIL_APP_PASSWORD
 ```
 
-Subir el contenido de `frontend/dist/` a Vercel, Netlify u otro host estático.
+Configuración en `backend/railway.json`.
+
+### Chatbot — Railway (servicio separado)
+
+Variables de entorno requeridas:
+```
+GROQ_API_KEY
+```
+
+Configuración en `chatbot/railway.json`. Railway detecta Python por `requirements.txt` e inicia con `uvicorn main:app --host 0.0.0.0 --port $PORT`.
+
+### Frontend — Vercel
+
+Conectar el repositorio en Vercel con:
+- **Root Directory**: `frontend`
+- **Framework**: Vite
+
+Variables de entorno requeridas:
+```
+VITE_API_URL=https://tu-backend.up.railway.app
+VITE_CHATBOT_URL=https://tu-chatbot.up.railway.app
+```

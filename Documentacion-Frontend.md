@@ -521,16 +521,23 @@ VITE_API_URL=https://tu-backend.railway.app bun run build
 
 O configurar `VITE_API_URL` y `VITE_CHATBOT_URL` como variables de entorno en el panel del proveedor y hacer el build ahí.
 
-### Paso 2 — Subir `dist/` al hosting
+### Paso 2 — Desplegar en Vercel
 
-El frontend compilado es completamente estático. Cualquier proveedor de hosting estático funciona.
+El proyecto está desplegado en **Vercel** conectado al repositorio de GitHub. Vercel construye automáticamente con cada push.
 
-| Proveedor | Notas |
-|---|---|
-| **Cloudflare Pages** | CDN global ultrarrápido, sin límite de builds, configuración de redirects para SPA muy simple. Recomendado. |
-| **Netlify** | Muy popular, buen plan gratuito, detección automática de Vite. |
-| **Vercel** | Optimizado para proyectos JavaScript/TypeScript, excelente DX. |
-| **GitHub Pages** | Gratuito, pero requiere configuración extra para React Router (SPA con rutas anidadas). |
+Configuración del proyecto en Vercel:
+- **Root Directory**: `frontend`
+- **Framework Preset**: Vite
+- **Build Command**: `bun run build`
+- **Output Directory**: `dist`
+
+Variables de entorno configuradas en Vercel:
+```
+VITE_API_URL=https://backend-production-64fa7.up.railway.app
+VITE_CHATBOT_URL=https://chatbot-production-2003.up.railway.app
+```
+
+Vercel genera una URL de producción estable (`cyberseclabs.vercel.app`) y URLs de preview únicas por cada deploy (`cyberseclabs-xxxx.vercel.app`).
 
 ### Configuración SPA requerida
 
@@ -566,7 +573,7 @@ chatbot/main.py  (FastAPI)
     │
     ├── retriever.py  ← TF-IDF sobre knowledge.json (RAG)
     ├── prompts.py    ← Sistema de prompts con contexto de página + FAQs
-    └── config.py     ← Cliente OpenAI-compatible (Ollama local / Groq cloud)
+    └── config.py     ← Cliente Groq (openai.AsyncOpenAI apuntando a api.groq.com)
 ```
 
 ### Flujo de una petición
@@ -575,7 +582,7 @@ chatbot/main.py  (FastAPI)
 2. React hace `POST /chat/stream` con `{ messages, context }` al microservicio.
 3. FastAPI recupera los 3 FAQs más relevantes de `knowledge.json` usando TF-IDF + similitud coseno.
 4. Construye el system prompt inyectando el contexto de página y los FAQs relevantes.
-5. Llama al LLM (Ollama local o Groq) con `stream=True`.
+5. Llama a **Groq** con `stream=True`.
 6. Transmite cada fragmento de respuesta como `data: {"chunk": "..."}` en formato SSE.
 7. `ChatWidget` acumula los fragmentos y actualiza el mensaje del asistente en tiempo real.
 
@@ -589,16 +596,11 @@ En lugar de incluir toda la base de conocimiento en el system prompt (que aument
 - **Umbral**: solo se incluyen FAQs con `score >= 0.10`. Si la pregunta es de ciberseguridad general (XSS, SQL injection, etc.), normalmente no supera el umbral y el modelo responde desde su conocimiento base.
 - **Normalización Unicode**: tanto el corpus como la consulta se normalizan antes de indexar/buscar (`"qué" == "que"`, `"cómo" == "como"`), usando `unicodedata.normalize("NFD")` más eliminación de diacríticos.
 
-### Proveedores LLM
+### Proveedor LLM
 
-El proveedor se selecciona con la variable `PROVIDER` en `chatbot/.env`:
+El chatbot usa **Groq** con el modelo `llama-3.3-70b-versatile`. Requiere la variable `GROQ_API_KEY` en `chatbot/.env`.
 
-| `PROVIDER` | Modelo | Uso |
-|---|---|---|
-| `ollama` (default) | `qwen2.5:1.5b` (configurable) | Desarrollo local — requiere Ollama corriendo en `localhost:11434` |
-| `groq` | `llama-3.3-70b-versatile` | Producción — requiere `GROQ_API_KEY` |
-
-Ambos usan el mismo cliente Python (`openai.AsyncOpenAI`) cambiando solo `base_url` y `api_key`, ya que Ollama expone una API compatible con OpenAI.
+Groq expone una API compatible con OpenAI, por lo que se usa el cliente `openai.AsyncOpenAI` apuntando a `https://api.groq.com/openai/v1`.
 
 ### Lectura SSE en el frontend
 
@@ -627,18 +629,23 @@ while (true) {
 }
 ```
 
+### Variables de entorno del chatbot
+
+```env
+GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
 ### Comandos del microservicio
 
 ```bash
 # Desde la carpeta chatbot/
-pip install fastapi uvicorn openai scikit-learn numpy python-dotenv
+pip install -r requirements.txt
 
 # Iniciar en desarrollo (puerto 8002)
 uvicorn main:app --reload --port 8002
-
-# O con el puerto por defecto (8001)
-uvicorn main:app --reload
 ```
+
+En producción, Railway usa `uvicorn main:app --host 0.0.0.0 --port $PORT` según `chatbot/railway.json`.
 
 ---
 
