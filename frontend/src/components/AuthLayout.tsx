@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { LogoIcon } from './Logo'
 import ThemeToggle from './ThemeToggle'
+import { api } from '../lib/api'
 
 const TERMINAL_LINES = [
   { text: '$ nmap -sV --script vuln 10.10.14.1', color: '#2596be', delay: '0.9s' },
@@ -28,6 +30,12 @@ export default function AuthLayout({
 }: AuthLayoutProps) {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
+
+  const [stats, setStats] = useState<{ courseCount: number; labCount: number; totalPoints: number } | null>(null)
+  useEffect(() => {
+    api.get<{ courseCount: number; labCount: number; totalPoints: number }>('/api/stats')
+      .then(setStats).catch(() => {})
+  }, [])
 
   return (
     <div className="min-h-screen flex" style={{ background: isDark ? '#060D1F' : '#EEF3FC' }}>
@@ -118,9 +126,9 @@ export default function AuthLayout({
             {/* Stats */}
             <div className="flex gap-12 pt-2 animate-fade-up-5">
               {[
-                { value: '3', label: 'Cursos' },
-                { value: '12+', label: 'Labs' },
-                { value: '1K+', label: 'Puntos' },
+                { value: stats ? String(stats.courseCount) : '—', label: 'Cursos' },
+                { value: stats ? String(stats.labCount) : '—', label: 'Labs' },
+                { value: stats ? `${stats.totalPoints.toLocaleString('es-CO')}` : '—', label: 'Puntos' },
               ].map(({ value, label }) => (
                 <div key={label}>
                   <p
