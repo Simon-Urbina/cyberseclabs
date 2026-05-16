@@ -50,7 +50,8 @@ cybersec-labs/
         ├── lib/                 # api.ts — cliente HTTP centralizado
         ├── components/          # Header, Footer, CourseCard, Ranking, ChatWidget, modals…
         └── pages/               # Landing, Login, Register, ForgotPassword, ResetPassword,
-                                 # Dashboard, CoursePage, LabPage, PublicProfilePage, AboutPage, NotFoundPage
+                                 # Dashboard, CoursePage, LabPage, PublicProfilePage,
+                                 # AboutPage, ForumPage, PrivacyPolicyPage, TermsOfUsePage, NotFoundPage
 ```
 
 ---
@@ -145,6 +146,8 @@ bun dev          # → http://localhost:5173
 | `@tailwindcss/vite` | ^4.2.4 | Plugin Tailwind para Vite |
 | `vite` | ^7.3.1 | Dev server y bundler |
 | `@vitejs/plugin-react` | ^5.1.1 | Plugin React para Vite |
+| `@vercel/analytics` | ^2.0.1 | Analytics de Vercel |
+| `@vercel/speed-insights` | ^2.0.0 | Speed Insights de Vercel |
 | `typescript` | ~5.9.3 | Compilador TypeScript |
 | `eslint` | ^9.39.1 | Linter |
 | `typescript-eslint` | ^8.48.0 | Reglas ESLint para TS |
@@ -227,6 +230,16 @@ Base URL: `http://localhost:3000`
 |--------|------|------|-------------|
 | GET | `/api/ranking` | — | Tabla de clasificación global |
 
+### Foro (`/api/forum`)
+
+| Método | Ruta | Auth | Descripción |
+|--------|------|------|-------------|
+| GET | `/api/forum` | Opcional | Comentarios raíz paginados (20/página) con conteo de respuestas |
+| GET | `/api/forum/:id/replies` | Opcional | Respuestas de un comentario |
+| POST | `/api/forum` | Bearer | Crear comentario raíz |
+| POST | `/api/forum/:id/replies` | Bearer | Responder a un comentario |
+| DELETE | `/api/forum/:id` | Bearer | Eliminar comentario propio (o cualquiera si `admin`) |
+
 ### Administración (`/api/admin`) — solo rol `admin`
 
 | Método | Ruta | Descripción |
@@ -292,6 +305,7 @@ Jerarquía principal: `courses → course_modules → laboratories → laborator
 | `submissions` | Envíos de quiz (exactamente 5 respuestas por envío) |
 | `user_laboratory_progress` | Mejor puntaje y estado por usuario/laboratorio |
 | `course_enrollments` | Inscripciones usuario-curso |
+| `forum_comments` | Comentarios del foro comunitario con soft-delete; `parent_id IS NULL` = raíz, `parent_id = <id>` = respuesta (máx. un nivel) |
 
 ### Triggers automáticos
 

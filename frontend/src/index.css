@@ -297,6 +297,13 @@ html.dark .lab-prose .md-h3 {
   font-size: 0.95rem;
   margin-bottom: 1rem;
 }
+.lab-prose strong {
+  font-weight: 650;
+  color: #1A3F96;
+}
+html.dark .lab-prose strong {
+  color: #93B0F0;
+}
 .lab-prose .md-pre {
   background: rgba(6, 13, 31, 0.7);
   border: 1px solid rgba(26, 63, 150, 0.2);

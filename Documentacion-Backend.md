@@ -1,7 +1,7 @@
 # Documentación Técnica del Backend — Cybersec Labs
 
 > **Audience:** Desarrolladores o estudiantes que quieran entender cómo está construido el backend de esta plataforma.  
-> **Fecha:** 2026-05-11
+> **Fecha:** 2026-05-16
 
 ---
 
@@ -21,6 +21,8 @@
 12. [Despliegue](#12-despliegue)
 13. [Glosario de Términos](#13-glosario-de-términos)
 
+> **Nota:** La sección 8 incluye los endpoints del foro (8.8) y los de administración se renumeraron a 8.9.
+
 ---
 
 ## 1. Visión General
@@ -32,6 +34,9 @@ El backend de Cybersec Labs es una **API REST** (Interfaz de Programación basad
 - Registrar el progreso de cada usuario en actividades y quizzes.
 - Otorgar puntos automáticamente al completar un laboratorio.
 - Exponer rutas exclusivas para administradores que permiten crear y editar contenido.
+- Gestionar el foro comunitario: comentarios raíz y respuestas de un solo nivel.
+
+> **Iniciativa académica:** CyberSec Labs nació como proyecto del **Semillero de Investigación en Ciberseguridad y Desarrollo de Software** de la Universidad Santo Tomás — Tunja, bajo la iniciativa y dirección del docente **Harrizon Alexander Soler Galindo**.
 
 El servidor escucha peticiones HTTP del frontend (React) y responde siempre en formato **JSON**.
 
@@ -71,19 +76,22 @@ backend/
 │   │   ├── submissions.ts       ← Rutas de envío de quizzes
 │   │   ├── ranking.ts           ← Ruta de tabla de posiciones
 │   │   ├── stats.ts             ← Ruta de estadísticas públicas
-│   │   └── admin.ts             ← Rutas exclusivas del administrador
+│   │   ├── admin.ts             ← Rutas exclusivas del administrador
+│   │   └── forum.ts             ← Rutas del foro comunitario
 │   ├── controllers/
 │   │   ├── AuthController.ts    ← Extrae datos del request y llama al Service correcto
 │   │   ├── UserController.ts
 │   │   ├── CourseController.ts
 │   │   ├── ActivityController.ts
-│   │   └── SubmissionController.ts
+│   │   ├── SubmissionController.ts
+│   │   └── ForumController.ts   ← Controlador del foro
 │   ├── services/
 │   │   ├── AuthService.ts       ← Contiene la lógica de negocio de autenticación
 │   │   ├── UserService.ts
 │   │   ├── CourseService.ts
 │   │   ├── ActivityService.ts
-│   │   └── SubmissionService.ts
+│   │   ├── SubmissionService.ts
+│   │   └── ForumService.ts      ← Lógica del foro (paginación, validaciones, soft-delete)
 │   ├── daos/
 │   │   ├── UserDAO.ts           ← Consultas SQL relacionadas con usuarios
 │   │   ├── CourseDAO.ts
@@ -96,7 +104,8 @@ backend/
 │   │   ├── SubmissionDAO.ts
 │   │   ├── ActivityActionLogDAO.ts
 │   │   ├── UserActivityProgressDAO.ts
-│   │   └── UserLaboratoryProgressDAO.ts
+│   │   ├── UserLaboratoryProgressDAO.ts
+│   │   └── ForumCommentDAO.ts   ← Consultas SQL del foro (findRoots, findReplies, create, softDelete)
 │   ├── models/
 │   │   ├── User.ts              ← Clase de dominio con validate() y proyecciones
 │   │   ├── Course.ts
@@ -110,6 +119,7 @@ backend/
 │   │   ├── ActivityActionLog.ts
 │   │   ├── UserActivityProgress.ts
 │   │   ├── UserLaboratoryProgress.ts
+│   │   ├── ForumComment.ts      ← Modelo del foro: validate(), isDeleted, toPublic()
 │   │   └── index.ts             ← Re-exporta todos los modelos
 │   └── utils/
 │       ├── errors.ts            ← Clases de error personalizadas (HTTPError, ValidationError)
@@ -282,6 +292,23 @@ Course.validate({ slug, title, difficulty? })
 | `title` | 3–180 caracteres | `'El título debe tener entre 3 y 180 caracteres.'` |
 | `difficulty` | Uno de: `principiante`, `intermedio`, `avanzado` | `'La dificultad debe ser una de: principiante, intermedio, avanzado.'` |
 
+#### `ForumComment.validate()`
+
+Valida el contenido de un comentario del foro antes de insertarlo.
+
+```typescript
+ForumComment.validate({ content })
+```
+
+| Campo | Regla | Error |
+|---|---|---|
+| `content` | No puede estar vacío (string con al menos 1 carácter) | `'El comentario no puede estar vacío.'` |
+| `content` | Máximo 2000 caracteres | `'El comentario no puede superar los 2000 caracteres.'` |
+
+El modelo también expone:
+- `get isDeleted(): boolean` — `true` si `deletedAt !== null`.
+- `toPublic(author, replyCount)` — devuelve `{ id, content, author, parentId, replyCount, createdAt, isDeleted }`. Si el comentario está eliminado, `content` = `'[comentario eliminado]'` y `author` = `null`.
+
 #### `CourseModule.validate()`
 
 Valida los datos de un módulo dentro de un curso.
@@ -341,6 +368,8 @@ Además del formato, los Services verifican reglas que requieren consultar la ba
 | `SubmissionService.submit` | Usuario inscrito en el curso padre | 403 `'Debes estar inscrito en el curso para enviar este laboratorio.'` |
 | `SubmissionService.submit` | Cada `questionId` pertenece al lab | 400 `'La pregunta X no pertenece a este laboratorio.'` |
 | `CourseService.getLaboratory` | Usuario inscrito para ver el lab | 403 `'Debes estar matriculado'` |
+| `ForumService.createReply` | El comentario padre existe y es raíz (no es ya una respuesta) | 400 `'No se puede responder a una respuesta.'` |
+| `ForumService.deleteComment` | El solicitante es dueño del comentario o tiene rol `admin` | 403 `'No tienes permiso para eliminar este comentario.'` |
 
 ### 5.4 Proyecciones de Datos (Principio de Mínimo Privilegio)
 
@@ -464,6 +493,18 @@ Estado del usuario en cada actividad práctica.
 
 #### `activity_action_logs`
 Registro de cada intento de actividad. Es un log inmutable (sin `UPDATE`).
+
+#### `forum_comments`
+Comentarios del foro comunitario. Soporta un único nivel de anidamiento.
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `user_id` | UUID | Autor del comentario. `SET NULL` al eliminar el usuario (el comentario persiste) |
+| `content` | TEXT | Cuerpo del comentario (1–2000 caracteres) |
+| `parent_id` | UUID | `NULL` = comentario raíz; `≠ NULL` = respuesta al comentario con ese id |
+| `deleted_at` | TIMESTAMPTZ | Soft-delete: si tiene valor, el contenido se muestra como `[comentario eliminado]` |
+
+> **Un solo nivel:** La API rechaza crear una respuesta a una respuesta (`parent_id` del padre debe ser `NULL`). El modelo de árbol es plano: raíz → respuestas, sin más profundidad.
 
 ### 6.4 Triggers de la Base de Datos
 
@@ -790,7 +831,44 @@ El body es un JSON libre que representa la acción del usuario. El servidor lo c
 }
 ```
 
-### 8.8 Admin (`/api/admin`) — Solo para rol `admin`
+### 8.8 Foro (`/api/forum`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| GET | `/` | Opcional | Comentarios raíz paginados (20/página), incluye `replyCount` y autor |
+| GET | `/:id/replies` | Opcional | Todas las respuestas de un comentario raíz |
+| POST | `/` | ✅ | Crear comentario raíz |
+| POST | `/:id/replies` | ✅ | Responder a un comentario raíz |
+| DELETE | `/:id` | ✅ | Eliminar comentario propio (o cualquiera si `admin`) |
+
+**Query params de `GET /api/forum`:** `?page=1` (defecto). Devuelve:
+```json
+{
+  "comments": [
+    {
+      "id": "uuid",
+      "content": "Texto del comentario",
+      "author": { "username": "simon", "profileImage": null },
+      "parentId": null,
+      "replyCount": 3,
+      "createdAt": "2026-05-16T12:00:00Z",
+      "isDeleted": false
+    }
+  ],
+  "total": 42,
+  "page": 1,
+  "totalPages": 3
+}
+```
+
+Comentarios eliminados: `content = "[comentario eliminado]"`, `author = null`, `isDeleted = true`.
+
+**Body de POST `/api/forum` y POST `/api/forum/:id/replies`:**
+```json
+{ "content": "Texto del comentario (máx. 2000 caracteres)" }
+```
+
+### 8.9 Admin (`/api/admin`) — Solo para rol `admin`
 
 Todos estos endpoints requieren token de administrador.
 

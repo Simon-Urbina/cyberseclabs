@@ -15,6 +15,7 @@ interface Comment {
   id: string
   content: string
   author: Author | null
+  authorId: string | null
   parentId: string | null
   replyCount: number
   createdAt: string
@@ -82,10 +83,11 @@ function CommentCard({
   const [submittingReply, setSubmittingReply] = useState(false)
   const [replyError, setReplyError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const showDelete = !comment.isDeleted && (
     currentUserRole === 'admin' ||
-    (currentUserId !== null && comment.author !== null)
+    (currentUserId !== null && comment.authorId === currentUserId)
   )
 
   async function loadReplies() {
@@ -125,11 +127,25 @@ function CommentCard({
   async function handleDelete(id: string) {
     if (!confirm('¿Eliminar este comentario?')) return
     setDeleting(true)
+    setDeleteError(null)
     try {
       await api.delete(`/api/forum/${id}`)
       onDeleted(id)
-    } catch {
+    } catch (err: unknown) {
+      setDeleteError(err instanceof Error ? err.message : 'Error al eliminar.')
       setDeleting(false)
+    }
+  }
+
+  async function handleDeleteReply(id: string) {
+    if (!confirm('¿Eliminar esta respuesta?')) return
+    try {
+      await api.delete(`/api/forum/${id}`)
+      setReplies(rs => rs.map(r =>
+        r.id === id ? { ...r, isDeleted: true, content: '[comentario eliminado]', author: null, authorId: null } : r,
+      ))
+    } catch {
+      // silent — reply delete errors are non-critical
     }
   }
 
@@ -157,7 +173,7 @@ function CommentCard({
                     className="font-mono text-[11px] transition-colors"
                     style={{ color: '#e05c5c', opacity: deleting ? 0.5 : 1 }}
                   >
-                    eliminar
+                    {deleting ? 'eliminando…' : 'eliminar'}
                   </button>
                 )}
               </div>
@@ -171,6 +187,9 @@ function CommentCard({
             >
               {comment.content}
             </p>
+            {deleteError && (
+              <p className="font-mono text-[11px] mt-1" style={{ color: '#e05c5c' }}>{deleteError}</p>
+            )}
           </div>
         </div>
 
@@ -208,9 +227,12 @@ function CommentCard({
                     <span className="font-mono text-[10px]" style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}>
                       {timeAgo(reply.createdAt)}
                     </span>
-                    {!reply.isDeleted && currentUserRole === 'admin' && (
+                    {!reply.isDeleted && (
+                      currentUserRole === 'admin' ||
+                      (currentUserId !== null && reply.authorId === currentUserId)
+                    ) && (
                       <button
-                        onClick={() => handleDelete(reply.id)}
+                        onClick={() => handleDeleteReply(reply.id)}
                         className="font-mono text-[10px]"
                         style={{ color: '#e05c5c' }}
                       >
@@ -324,7 +346,7 @@ export default function ForumPage() {
       return {
         ...prev,
         comments: prev.comments.map(c =>
-          c.id === id ? { ...c, isDeleted: true, content: '[comentario eliminado]', author: null } : c,
+          c.id === id ? { ...c, isDeleted: true, content: '[comentario eliminado]', author: null, authorId: null } : c,
         ),
       }
     })

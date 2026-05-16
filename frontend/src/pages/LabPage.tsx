@@ -125,6 +125,12 @@ function mdToTerminalLines(md: string) {
   return lines
 }
 
+function formatDate(iso: string): string {
+  const d = new Date(iso)
+  const month = d.toLocaleDateString('es-CO', { month: 'long' })
+  return `${d.getFullYear()} - ${d.getDate()} de ${month}`
+}
+
 function extractCommand(md: string): string {
   const m = md.match(/```[^\n]*\n([\s\S]*?)```/)
   if (!m) return ''
@@ -1088,7 +1094,7 @@ export default function LabPage() {
                         {h.correctAnswersCount} correctas
                       </span>
                       <span className="ml-auto font-mono text-[11px]" style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}>
-                        {new Date(h.submittedAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {formatDate(h.submittedAt)}
                       </span>
                     </div>
                   )

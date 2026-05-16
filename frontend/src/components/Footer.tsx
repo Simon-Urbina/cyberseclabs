@@ -14,16 +14,9 @@ const FOOTER_COLUMNS = [
   {
     label: 'Comunidad',
     links: [
-      { label: 'GitHub', to: 'https://github.com/Simon-Urbina/cyberseclabs', external: true },
-      { label: 'Reportar un bug', to: 'https://github.com/Simon-Urbina/cyberseclabs/issues', external: true },
-      { label: 'Acerca de', to: '/about' },
-    ],
-  },
-  {
-    label: 'Legal',
-    links: [
       { label: 'Política de privacidad', to: '/privacy-policy' },
       { label: 'Términos de uso', to: '/terms-of-use' },
+      { label: 'Acerca de', to: '/about' },
     ],
   },
   {
@@ -38,7 +31,7 @@ const FOOTER_COLUMNS = [
 const SOCIAL = [
   {
     label: 'GitHub',
-    href: 'https://github.com/Simon-Urbina/cyberseclabs',
+    href: 'https://github.com/Simon-Urbina',
     svg: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.04c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.21.09 1.85 1.24 1.85 1.24 1.07 1.84 2.81 1.31 3.5 1 .11-.78.42-1.31.76-1.61-2.66-.3-5.46-1.33-5.46-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12 12 0 0 0 12 .5"/>
@@ -162,7 +155,7 @@ export default function Footer() {
           </div>
 
           {/* Link columns */}
-          <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-8">
+          <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8">
             {FOOTER_COLUMNS.map(({ label, links }) => (
               <div key={label}>
                 <p

@@ -1,7 +1,7 @@
 # Documentación Técnica del Frontend — Cybersec Labs
 
 > **Audience:** Desarrolladores o estudiantes que quieran entender cómo está construido el frontend de esta plataforma.  
-> **Fecha:** 2026-05-11
+> **Fecha:** 2026-05-16
 
 ---
 
@@ -34,6 +34,9 @@ El frontend de Cybersec Labs es una **SPA** (*Single Page Application*) construi
 - Gestionar el inicio y cierre de sesión sin recargar la página.
 - Adaptarse al tema claro u oscuro según la preferencia guardada en `localStorage`.
 - Mostrar un asistente de IA ("Uchi") disponible en todas las páginas autenticadas.
+- Proveer un foro comunitario donde los usuarios autenticados pueden publicar comentarios y respuestas.
+
+> **Iniciativa académica:** CyberSec Labs nació como proyecto del **Semillero de Investigación en Ciberseguridad y Desarrollo de Software** de la Universidad Santo Tomás — Tunja, bajo la iniciativa y dirección del docente **Harrizon Alexander Soler Galindo**.
 
 El frontend es completamente estático una vez compilado: solo contiene HTML, CSS y JavaScript. Toda la lógica de negocio y el acceso a la base de datos ocurre en el backend (Railway). El chatbot Uchi se comunica con un microservicio Python separado.
 
@@ -50,6 +53,7 @@ El frontend es completamente estático una vez compilado: solo contiene HTML, CS
 | **Estilos** | [Tailwind CSS v4](https://tailwindcss.com) | Framework de estilos utilitarios. Se aplica con clases directamente en JSX. |
 | **Dev server / Build** | [Vite](https://vite.dev) | Inicia el servidor de desarrollo en milisegundos. Compila el proyecto para producción con Rolldown. |
 | **Linter** | ESLint + typescript-eslint | Detecta errores de código y malas prácticas. |
+| **Analytics** | `@vercel/analytics` + `@vercel/speed-insights` | Métricas de uso y rendimiento real de la aplicación, integradas con Vercel. |
 
 ---
 
@@ -72,8 +76,8 @@ frontend/
 │   ├── lib/
 │   │   └── api.ts               ← Cliente HTTP centralizado (get, post, put, patch, delete)
 │   ├── components/
-│   │   ├── Header.tsx           ← Barra de navegación superior
-│   │   ├── Footer.tsx           ← Pie de página
+│   │   ├── Header.tsx           ← Barra de navegación superior (incluye enlace "Foro")
+│   │   ├── Footer.tsx           ← Pie de página con columnas Plataforma y Legal
 │   │   ├── Logo.tsx             ← Logo SVG con enlace a la raíz
 │   │   ├── ThemeToggle.tsx      ← Botón para alternar tema
 │   │   ├── CourseCard.tsx       ← Tarjeta de curso en la lista del dashboard
@@ -81,6 +85,7 @@ frontend/
 │   │   ├── AuthLayout.tsx       ← Layout centrado para páginas de autenticación
 │   │   ├── EnrollConfirmModal.tsx ← Modal de confirmación de matrícula
 │   │   ├── ProfileEditModal.tsx   ← Modal para editar perfil
+│   │   ├── CookieBanner.tsx       ← Banner de consentimiento de cookies (GDPR)
 │   │   └── ChatWidget.tsx         ← Asistente IA "Uchi" (chat flotante, esquina inferior izquierda)
 │   └── pages/
 │       ├── LandingPage.tsx      ← Página de inicio pública con hero, features y ranking
@@ -92,7 +97,10 @@ frontend/
 │       ├── CoursePage.tsx       ← Detalle de un curso con sus módulos y labs
 │       ├── LabPage.tsx          ← Laboratorio con contenido Markdown, actividades y quiz
 │       ├── PublicProfilePage.tsx ← Perfil público de cualquier usuario (/u/:username)
-│       ├── AboutPage.tsx        ← Página sobre el autor de la plataforma
+│       ├── AboutPage.tsx        ← Sobre el proyecto, su autor y la iniciativa académica
+│       ├── ForumPage.tsx        ← Foro comunitario con comentarios y respuestas paginados
+│       ├── PrivacyPolicyPage.tsx ← Política de privacidad de la plataforma
+│       ├── TermsOfUsePage.tsx   ← Términos de uso de la plataforma
 │       └── NotFoundPage.tsx     ← Página 404
 ├── index.html                   ← HTML raíz con el div#root donde React se monta
 ├── vite.config.ts               ← Configuración de Vite (plugin React, plugin Tailwind)
@@ -111,7 +119,10 @@ Las rutas se definen en `src/App.tsx` usando React Router DOM. Hay tres tipos:
 | Ruta | Componente | Descripción |
 |---|---|---|
 | `/` | `LandingPage` | Página de inicio: hero, features, stats, ranking |
-| `/about` | `AboutPage` | Sobre el autor y la historia del proyecto |
+| `/about` | `AboutPage` | Sobre el proyecto, autor y la iniciativa académica |
+| `/forum` | `ForumPage` | Foro comunitario — lectura libre, escritura requiere sesión |
+| `/privacy-policy` | `PrivacyPolicyPage` | Política de privacidad de la plataforma |
+| `/terms-of-use` | `TermsOfUsePage` | Términos de uso de la plataforma |
 | `/u/:username` | `PublicProfilePage` | Perfil público de un usuario |
 | `/forgot-password` | `ForgotPasswordPage` | Formulario para pedir reset de contraseña |
 | `/reset-password` | `ResetPasswordPage` | Formulario para establecer nueva contraseña |
@@ -178,13 +189,20 @@ function AppShell() {
 
 Barra de navegación superior que aparece en la mayoría de páginas. Contiene:
 - Logo con enlace a `/`
-- Links de navegación (Dashboard, Ranking, About)
+- Links de navegación: Dashboard, Foro, Ranking, About (en escritorio y menú móvil)
 - Avatar del usuario con dropdown (perfil, cerrar sesión)
 - `ThemeToggle` para cambiar el tema
 
+El menú móvil se despliega con un ícono de hamburguesa. En ambos modos (desktop y móvil) el enlace "Foro" aparece para usuarios autenticados y para invitados.
+
 ### `Footer`
 
-Pie de página con créditos y links externos. Se incluye en LandingPage y AboutPage.
+Pie de página con tres columnas de enlaces:
+- **Plataforma**: Dashboard, Foro, Ranking, About
+- **Legal**: Política de Privacidad, Términos de Uso
+- Créditos y links al repositorio y redes del autor
+
+Se incluye en LandingPage, AboutPage, y páginas legales.
 
 ### `CourseCard`
 
@@ -237,6 +255,34 @@ Asistente de IA "Uchi" disponible en toda la plataforma como un widget flotante 
 | **Mobile** | Panel adaptativo: `calc(100vw - 3rem)` de ancho, `70svh` de alto; overlay de cierre táctil |
 | **Teclado** | `Enter` envía el mensaje; `Shift+Enter` agrega una nueva línea; `Escape` cierra el panel |
 | **SSE** | Lee el stream del microservicio Python línea a línea con buffer acumulativo |
+
+### `CookieBanner`
+
+Banner de consentimiento de cookies que aparece en la primera visita del usuario (invitado o autenticado) cuando aún no ha aceptado la política de privacidad. Se muestra en la parte inferior de la pantalla y persiste hasta que el usuario hace clic en "Aceptar".
+
+- Guarda el consentimiento en `localStorage` para no volver a mostrarse.
+- Incluye enlace a `/privacy-policy` para que el usuario pueda leer la política antes de aceptar.
+- Se monta desde `App.tsx` fuera del árbol de rutas, igual que `ChatWidget`.
+
+### `ForumPage`
+
+Foro comunitario de la plataforma. Accesible públicamente; la escritura requiere sesión activa.
+
+Compuesto por tres sub-componentes internos definidos en el mismo archivo:
+
+| Sub-componente | Responsabilidad |
+|---|---|
+| `Avatar` | Muestra la foto de perfil del autor (o inicial si no tiene avatar) |
+| `CommentCard` | Renderiza un comentario raíz con sus controles: expandir/colapsar respuestas, responder, eliminar |
+| `ForumPage` | Componente raíz: carga paginada de comentarios, compositor de comentario nuevo, botón "Cargar más" |
+
+Comportamiento clave:
+
+- **Paginación**: Los comentarios raíz se cargan en páginas de 20 (`GET /api/forum?page=N`). El botón "Cargar más" agrega la siguiente página al final de la lista sin reemplazarla.
+- **Respuestas**: Al expandir un `CommentCard`, se cargan sus respuestas (`GET /api/forum/:id/replies`). El formulario de respuesta aparece inline bajo la lista de respuestas.
+- **Soft-delete**: Los comentarios eliminados muestran `[comentario eliminado]` en lugar del contenido y no muestran autor.
+- **Autorización de borrado**: El botón de eliminar aparece solo si `!comment.isDeleted && (usuario es admin || el comentario tiene autor y el usuario actual es el autor)`.
+- **Invitados**: En lugar del compositor, se muestra un enlace "Inicia sesión para comentar".
 
 El widget detecta en qué página está el usuario (`pathname`) y construye un objeto `context` que se envía junto con cada mensaje:
 

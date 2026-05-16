@@ -386,6 +386,37 @@ export default function AboutPage() {
                   Cada lab está diseñado para enseñar algo concreto que puedas aplicar. Sin relleno, sin teoría plana. Solo terminales, problemas, y el progreso que acumulas al resolverlos.
                 </p>
               </div>
+
+              {/* Docente */}
+              <div
+                className="mt-8 rounded-2xl p-6 flex items-start gap-4"
+                style={{
+                  background: isDark ? 'rgba(37,150,190,0.07)' : 'rgba(37,150,190,0.06)',
+                  border: `1px solid ${isDark ? 'rgba(37,150,190,0.22)' : 'rgba(37,150,190,0.20)'}`,
+                }}
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: isDark ? 'rgba(37,150,190,0.15)' : 'rgba(37,150,190,0.10)', color: '#2596be' }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-mono text-[10px] tracking-[0.18em] uppercase mb-1.5" style={{ color: '#2596be' }}>
+                    // iniciativa y dirección académica
+                  </p>
+                  <p className="font-semibold text-[15px] mb-0.5" style={{ color: isDark ? '#C8D5EE' : '#0A1545' }}>
+                    Harrizon Alexander Soler Galindo
+                  </p>
+                  <p className="text-[13px]" style={{ color: isDark ? '#4A70CC' : '#2451C8' }}>
+                    Docente — Universidad Santo Tomás, Tunja<br />
+                    Semillero de Investigación en Ciberseguridad y Desarrollo de Software
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Stack */}
@@ -504,7 +535,7 @@ export default function AboutPage() {
 
             {/* GitHub Issues */}
             <a
-              href="https://github.com/Simon-Urbina/cyberseclabs/issues"
+              href="https://github.com/Simon-Urbina"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-2xl p-7 transition-all duration-200 flex flex-col gap-4"
