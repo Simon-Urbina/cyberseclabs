@@ -185,7 +185,9 @@ Base URL: `http://localhost:3000`
 
 | Método | Ruta | Auth | Descripción |
 |--------|------|------|-------------|
-| POST | `/api/auth/register` | — | Registrar usuario |
+| POST | `/api/auth/register` | — | Paso 1 del registro: valida datos y envía código de 6 dígitos al email |
+| POST | `/api/auth/verify-email` | — | Paso 2 del registro: verifica el código y crea el usuario → devuelve JWT |
+| POST | `/api/auth/resend-verification` | — | Reenviar código de verificación |
 | POST | `/api/auth/login` | — | Iniciar sesión → devuelve JWT |
 | POST | `/api/auth/logout` | Bearer | Cerrar sesión |
 | POST | `/api/auth/forgot-password` | — | Enviar email de restablecimiento |

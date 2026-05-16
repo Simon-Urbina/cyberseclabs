@@ -1,19 +1,75 @@
 import type { Context } from 'hono'
 import { AuthService } from '../services/AuthService.js'
 import { UserDAO } from '../daos/UserDAO.js'
-import { sendPasswordResetEmail } from '../utils/email.js'
+import { sendPasswordResetEmail, sendVerificationEmail } from '../utils/email.js'
 
 // In-memory reset tokens (key → {userId, expiresAt}). Resets on server restart.
 const resetTokens = new Map<string, { userId: string; expiresAt: number }>()
 
+// Pending registrations awaiting email verification (key = email). Resets on server restart.
+const pendingRegistrations = new Map<string, {
+  username: string
+  email: string
+  passwordHash: string
+  code: string
+  expiresAt: number
+}>()
+
+function generateCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
 export class AuthController {
   static async register(c: Context) {
     const { username, email, password } = await c.req.json()
-    const { user, token } = await AuthService.register(username, email, password)
+    const prepared = await AuthService.prepareRegistration(username, email, password)
+    const code = generateCode()
+    pendingRegistrations.set(prepared.email, {
+      ...prepared,
+      code,
+      expiresAt: Date.now() + 900_000, // 15 minutos
+    })
+    try {
+      await sendVerificationEmail(prepared.email, prepared.username, code)
+    } catch (err) {
+      console.error('[register] Error enviando email de verificación:', err)
+    }
+    return c.json({ message: 'Código de verificación enviado. Revisa tu correo.', email: prepared.email }, 200)
+  }
+
+  static async verifyEmail(c: Context) {
+    const { email, code } = await c.req.json()
+    if (!email || !code) return c.json({ error: 'Email y código son requeridos.' }, 400)
+    const pending = pendingRegistrations.get(email.toLowerCase())
+    if (!pending || pending.expiresAt < Date.now()) {
+      pendingRegistrations.delete(email.toLowerCase())
+      return c.json({ error: 'El código es inválido o ha expirado.' }, 400)
+    }
+    if (pending.code !== code.trim())
+      return c.json({ error: 'Código incorrecto.' }, 400)
+    pendingRegistrations.delete(email.toLowerCase())
+    const { user, token } = await AuthService.createUser(pending.username, pending.email, pending.passwordHash)
     return c.json(
       { token, user: { id: user.id, username: user.username, email: user.email, role: user.role } },
       201,
     )
+  }
+
+  static async resendVerification(c: Context) {
+    const { email } = await c.req.json()
+    if (!email) return c.json({ error: 'Email requerido.' }, 400)
+    const pending = pendingRegistrations.get(email.toLowerCase())
+    if (pending) {
+      const code = generateCode()
+      pendingRegistrations.set(email.toLowerCase(), { ...pending, code, expiresAt: Date.now() + 900_000 })
+      try {
+        await sendVerificationEmail(pending.email, pending.username, code)
+      } catch (err) {
+        console.error('[resend-verification] Error enviando email:', err)
+      }
+    }
+    // Always return same message to avoid enumeration
+    return c.json({ message: 'Si hay un registro pendiente, se enviará un nuevo código.' })
   }
 
   static async login(c: Context) {

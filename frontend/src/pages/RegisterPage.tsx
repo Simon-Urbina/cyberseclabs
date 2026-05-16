@@ -78,12 +78,36 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const isDark = theme === 'dark'
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Step 2: email verification
+  const [step, setStep] = useState<'register' | 'verify'>('register')
+  const [pendingEmail, setPendingEmail] = useState('')
+  const [code, setCode] = useState('')
+  const [resendCooldown, setResendCooldown] = useState(0)
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      const res = await api.post<{ token: string; user: any }>('/api/auth/register', form)
+      const res = await api.post<{ message: string; email: string }>('/api/auth/register', form)
+      setPendingEmail(res.email)
+      setStep('verify')
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const res = await api.post<{ token: string; user: any }>('/api/auth/verify-email', {
+        email: pendingEmail,
+        code: code.trim(),
+      })
       login(res.token, res.user)
       navigate('/dashboard')
     } catch (err: any) {
@@ -91,6 +115,138 @@ export default function RegisterPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleResend = async () => {
+    if (resendCooldown > 0) return
+    try {
+      await api.post('/api/auth/resend-verification', { email: pendingEmail })
+      setResendCooldown(60)
+      const interval = setInterval(() => {
+        setResendCooldown(prev => {
+          if (prev <= 1) { clearInterval(interval); return 0 }
+          return prev - 1
+        })
+      }, 1000)
+    } catch {
+      // silently fail — backend always returns success
+    }
+  }
+
+  const [codeFocused, setCodeFocused] = useState(false)
+
+  if (step === 'verify') {
+    return (
+      <AuthLayout
+        terminalComment="// verificación de identidad"
+        headline={
+          <h1
+            className="font-display leading-[1.05]"
+            style={{ fontSize: 'clamp(2.8rem, 5vw, 3.8rem)', color: '#C8D5EE' }}
+          >
+            Confirma<br />
+            tu<br />
+            <span style={{ color: '#F5C500', textShadow: '0 0 32px rgba(245,197,0,0.45)' }}>identidad.</span>
+          </h1>
+        }
+        subheadline="Revisa tu correo y pega el código de verificación."
+      >
+        <div className="mb-10">
+          <p
+            className="font-mono text-[10px] tracking-[0.22em] uppercase mb-4"
+            style={{ color: isDark ? '#7B9FE8' : '#1A3F96' }}
+          >
+            // verificar correo
+          </p>
+          <h2
+            className="font-display"
+            style={{ fontSize: '2.25rem', lineHeight: 1.1, color: isDark ? '#C8D5EE' : '#0A1545' }}
+          >
+            Código enviado
+          </h2>
+          <p className="text-[15px] mt-3" style={{ color: isDark ? '#7B9FE8' : '#2451C8' }}>
+            Enviamos un código de 6 dígitos a{' '}
+            <span className="font-semibold" style={{ color: isDark ? '#C8D5EE' : '#0A1545' }}>
+              {pendingEmail}
+            </span>
+          </p>
+        </div>
+
+        <form onSubmit={handleVerify} className="space-y-7">
+          <div className="space-y-2">
+            <label
+              className="block font-mono text-[10px] tracking-[0.18em] uppercase"
+              style={{ color: isDark ? '#7B9FE8' : '#1A3F96' }}
+            >
+              Código de verificación
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              required
+              value={code}
+              onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              onFocus={() => setCodeFocused(true)}
+              onBlur={() => setCodeFocused(false)}
+              placeholder="000000"
+              className="input-terminal w-full text-center text-[28px] tracking-[0.5em] px-5 py-4"
+              style={{
+                color: isDark ? '#C8D5EE' : '#0A1545',
+                border: `1px solid ${codeFocused ? '#F5C500' : isDark ? 'rgba(26,63,150,0.30)' : 'rgba(26,63,150,0.35)'}`,
+                borderRadius: '10px',
+                transition: 'border-color 0.2s ease',
+                fontFamily: 'monospace',
+              }}
+            />
+          </div>
+
+          {error && (
+            <div
+              className="flex items-start gap-3 px-4 py-3 rounded-xl"
+              style={{
+                background: isDark ? 'rgba(6,13,31,0.6)' : '#eef0f8',
+                border: '1px solid rgba(26,63,150,0.25)',
+                borderLeft: '3px solid #1A3F96',
+              }}
+            >
+              <span className="font-mono text-xs mt-0.5" style={{ color: '#1A3F96' }}>ERR</span>
+              <p className="text-[14px]" style={{ color: isDark ? '#93B0F0' : '#0A1545' }}>{error}</p>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || code.length < 6}
+            className="btn-gold w-full py-4 rounded-xl text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <span className="font-mono text-xs tracking-[0.15em] cursor-blink">Verificando</span>
+            ) : (
+              'Verificar y crear cuenta'
+            )}
+          </button>
+
+          <div className="text-center space-y-2">
+            <p className="text-[14px]" style={{ color: isDark ? '#7B9FE8' : '#2451C8' }}>
+              ¿No recibiste el correo?{' '}
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resendCooldown > 0}
+                className="font-semibold transition-colors hover:underline disabled:cursor-not-allowed disabled:no-underline"
+                style={{ color: resendCooldown > 0 ? (isDark ? '#3A5AB8' : '#9CA3AF') : (isDark ? '#F5C500' : '#1A3F96') }}
+              >
+                {resendCooldown > 0 ? `Reenviar en ${resendCooldown}s` : 'Reenviar código'}
+              </button>
+            </p>
+            <p className="text-[13px]" style={{ color: isDark ? '#3A5AB8' : '#9CA3AF' }}>
+              El código expira en 15 minutos.
+            </p>
+          </div>
+        </form>
+      </AuthLayout>
+    )
   }
 
   return (
@@ -133,7 +289,7 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-7">
+      <form onSubmit={handleRegister} className="space-y-7">
         <InputField
           label="Username" type="text"
           value={form.username}
@@ -176,7 +332,7 @@ export default function RegisterPage() {
           className="btn-gold w-full py-4 rounded-xl text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
-            <span className="font-mono text-xs tracking-[0.15em] cursor-blink">Creando cuenta</span>
+            <span className="font-mono text-xs tracking-[0.15em] cursor-blink">Enviando código</span>
           ) : (
             'Crear cuenta gratis'
           )}

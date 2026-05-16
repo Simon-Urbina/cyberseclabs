@@ -332,8 +332,8 @@ Además del formato, los Services verifican reglas que requieren consultar la ba
 
 | Service | Validación | Error HTTP |
 |---|---|---|
-| `AuthService.register` | Email no registrado previamente | 409 `'El email ya está registrado.'` |
-| `AuthService.register` | Username no tomado | 409 `'El username ya está en uso.'` |
+| `AuthService.prepareRegistration` | Email no registrado previamente | 409 `'El email ya está registrado.'` |
+| `AuthService.prepareRegistration` | Username no tomado | 409 `'El username ya está en uso.'` |
 | `AuthService.login` | Usuario existe y contraseña coincide | 401 `'Credenciales inválidas.'` |
 | `SubmissionService.submit` | Laboratorio existe y está publicado | 404 `'Laboratorio no encontrado.'` |
 | `SubmissionService.submit` | Exactamente 5 respuestas enviadas | 400 `'Debes responder exactamente 5 preguntas.'` |
@@ -523,7 +523,45 @@ Firma:   HMAC-SHA256(header + payload, JWT_SECRET)
 
 El token expira después de **7 días**. Si un usuario tiene el token de otra persona, no puede forjarlo porque no conoce el `JWT_SECRET` con el que fue firmado.
 
-### 7.2 Reset de Contraseña
+### 7.2 Verificación de Email al Registro
+
+El registro es un proceso de **dos pasos** para asegurar que el email pertenece realmente al usuario:
+
+```
+Paso 1 — POST /api/auth/register
+  1. AuthService.prepareRegistration() valida los datos y hashea la contraseña.
+  2. Se genera un código numérico de 6 dígitos (100000–999999).
+  3. Los datos del registro pendiente se guardan en memoria (Map pendingRegistrations).
+  4. Se envía el código al email del usuario con sendVerificationEmail().
+  5. El usuario AÚN NO se crea en la base de datos.
+  6. Respuesta: { message, email }
+
+Paso 2 — POST /api/auth/verify-email
+  1. Se busca el registro pendiente por email.
+  2. Se verifica que el código no haya expirado y que coincida.
+  3. AuthService.createUser() crea el usuario en la base de datos.
+  4. Se elimina la entrada del Map pendingRegistrations.
+  5. Respuesta: { token, user } — igual que un login exitoso.
+```
+
+```typescript
+// En AuthController:
+const pendingRegistrations = new Map<string, {
+  username: string
+  email: string
+  passwordHash: string
+  code: string
+  expiresAt: number
+}>()
+```
+
+- El código es de 6 dígitos numéricos generado con `Math.random()`.
+- Expira en **15 minutos** (`Date.now() + 900_000`).
+- Al reiniciar el servidor, todos los registros pendientes se pierden (el usuario debe volver a registrarse).
+- Existe un endpoint adicional `POST /api/auth/resend-verification` para reenviar un nuevo código al mismo email, reemplazando el anterior.
+- Se usa la misma respuesta en `resend-verification` para emails registrados y no registrados, evitando *email enumeration*.
+
+### 7.3 Reset de Contraseña
 
 Los tokens de restablecimiento de contraseña se almacenan **en memoria** (no en la base de datos):
 
@@ -538,7 +576,7 @@ const resetTokens = new Map<string, { userId: string; expiresAt: number }>()
 - El enlace de reset (`${FRONTEND_URL}/reset-password?token=...`) se envía por correo usando la **Gmail REST API con OAuth2** (`src/utils/email.ts`). No usa SMTP — usa HTTPS directamente, lo que es compatible con plataformas cloud como Railway que bloquean puertos SMTP.
 - Se usa la misma respuesta para correos registrados y no registrados, evitando *email enumeration*.
 
-### 7.3 Middleware de Autenticación
+### 7.4 Middleware de Autenticación
 
 En `src/middleware/auth.ts` hay tres funciones que actúan como "porteros":
 
@@ -567,18 +605,30 @@ Todos los endpoints comienzan con el prefijo `/api`.
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
-| POST | `/register` | ❌ | Registrar nuevo usuario |
+| POST | `/register` | ❌ | Paso 1 del registro: valida datos y envía código al email |
+| POST | `/verify-email` | ❌ | Paso 2 del registro: verifica el código y crea el usuario |
+| POST | `/resend-verification` | ❌ | Reenviar el código de verificación al mismo email |
 | POST | `/login` | ❌ | Iniciar sesión, recibe token JWT |
 | POST | `/logout` | ✅ | Cierra sesión (el token es stateless, solo es simbólico) |
 | POST | `/forgot-password` | ❌ | Solicitar enlace de restablecimiento de contraseña |
 | POST | `/reset-password` | ❌ | Restablecer contraseña con el token recibido por email |
 
-**Registro — body esperado:**
+**Registro paso 1 — body esperado:**
 ```json
 { "username": "simon", "email": "simon@ejemplo.com", "password": "min8chars" }
 ```
 
-**Respuesta de login:**
+**Registro paso 1 — respuesta:**
+```json
+{ "message": "Código de verificación enviado. Revisa tu correo.", "email": "simon@ejemplo.com" }
+```
+
+**Registro paso 2 (verify-email) — body esperado:**
+```json
+{ "email": "simon@ejemplo.com", "code": "483920" }
+```
+
+**Respuesta de verify-email (y de login):**
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",

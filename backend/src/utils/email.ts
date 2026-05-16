@@ -20,6 +20,60 @@ async function getAccessToken(): Promise<string> {
   return data.access_token
 }
 
+export async function sendVerificationEmail(to: string, username: string, code: string): Promise<void> {
+  const from = process.env.GMAIL_USER
+  if (!from) throw new Error('GMAIL_USER es requerido')
+
+  const accessToken = await getAccessToken()
+
+  const subject = 'Verifica tu correo — CyberSec Labs'
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
+      <h2 style="margin:0 0 8px;font-size:22px;color:#0A1545">Verificación de correo</h2>
+      <p style="color:#374151;line-height:1.6">
+        Hola <strong>${username}</strong>, gracias por registrarte en CyberSec Labs.
+        Ingresa el siguiente código en la plataforma para activar tu cuenta. Expira en <strong>15 minutos</strong>.
+      </p>
+      <div style="margin:28px 0;padding:20px 32px;background:#f0f4ff;border-radius:12px;text-align:center;letter-spacing:0.35em;font-size:36px;font-weight:700;font-family:monospace;color:#0A1545;border:1px solid rgba(26,63,150,0.2)">
+        ${code}
+      </div>
+      <p style="color:#6b7280;font-size:13px">
+        Si no creaste esta cuenta, puedes ignorar este correo.
+      </p>
+    </div>
+  `
+
+  const mime = [
+    `From: "CyberSec Labs" <${from}>`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/html; charset=utf-8',
+    '',
+    html,
+  ].join('\r\n')
+
+  const encoded = Buffer.from(mime, 'utf-8')
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
+
+  const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ raw: encoded }),
+  })
+
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`Gmail API error ${res.status}: ${body}`)
+  }
+}
+
 export async function sendPasswordResetEmail(to: string, resetLink: string): Promise<void> {
   const from = process.env.GMAIL_USER
   if (!from) throw new Error('GMAIL_USER es requerido')

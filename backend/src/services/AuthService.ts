@@ -12,11 +12,11 @@ function getSecret(): string {
 }
 
 export class AuthService {
-  static async register(
+  static async prepareRegistration(
     username: string,
     email: string,
     password: string,
-  ): Promise<{ user: User; token: string }> {
+  ): Promise<{ username: string; email: string; passwordHash: string }> {
     const errors: string[] = []
     if (!username || username.trim().length < 3 || username.trim().length > 50)
       errors.push('El username debe tener entre 3 y 50 caracteres.')
@@ -32,11 +32,15 @@ export class AuthService {
       throw new HTTPError(409, 'El username ya está en uso.')
 
     const passwordHash = await Bun.password.hash(password)
-    const user = await UserDAO.create({
-      username: username.trim(),
-      email: email.toLowerCase(),
-      passwordHash,
-    })
+    return { username: username.trim(), email: email.toLowerCase(), passwordHash }
+  }
+
+  static async createUser(
+    username: string,
+    email: string,
+    passwordHash: string,
+  ): Promise<{ user: User; token: string }> {
+    const user = await UserDAO.create({ username, email, passwordHash })
     return { user, token: AuthService.generateToken(user) }
   }
 

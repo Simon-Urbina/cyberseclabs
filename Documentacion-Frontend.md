@@ -85,7 +85,7 @@ frontend/
 │   └── pages/
 │       ├── LandingPage.tsx      ← Página de inicio pública con hero, features y ranking
 │       ├── LoginPage.tsx        ← Formulario de inicio de sesión
-│       ├── RegisterPage.tsx     ← Formulario de registro
+│       ├── RegisterPage.tsx     ← Registro en 2 pasos: formulario + verificación de código por email
 │       ├── ForgotPasswordPage.tsx ← Solicitar restablecimiento de contraseña
 │       ├── ResetPasswordPage.tsx  ← Formulario de nueva contraseña con token
 │       ├── DashboardPage.tsx    ← Panel principal del usuario autenticado
@@ -123,7 +123,7 @@ Solo accesibles si el usuario **no** está autenticado. Si ya tiene sesión, red
 | Ruta | Componente |
 |---|---|
 | `/login` | `LoginPage` |
-| `/register` | `RegisterPage` |
+| `/register` | `RegisterPage` — paso 1 (formulario) y paso 2 (código de verificación) en el mismo componente |
 
 ### Rutas protegidas (`PrivateRoute`)
 
@@ -193,6 +193,19 @@ Tarjeta que muestra el resumen de un curso: título, dificultad, número de mód
 ### `Ranking`
 
 Tabla de clasificación paginada. Muestra posición, avatar, username, puntos y bio. Se usa tanto en `LandingPage` (previsualización) como en páginas dedicadas.
+
+### `RegisterPage` — Flujo de 2 pasos
+
+El registro tiene dos fases dentro del mismo componente, controladas por el estado `step`:
+
+| Paso | `step` | Acción |
+|---|---|---|
+| 1 | `'register'` | El usuario llena username, email y contraseña → `POST /api/auth/register` → el backend envía el código al email |
+| 2 | `'verify'` | El usuario ingresa el código de 6 dígitos → `POST /api/auth/verify-email` → el backend crea el usuario y devuelve el JWT |
+
+El paso 2 incluye un botón "Reenviar código" con un **cooldown de 60 segundos** (llama a `POST /api/auth/resend-verification`). El código expira en 15 minutos.
+
+Al verificar correctamente, se llama a `login(token, user)` del contexto y se navega a `/dashboard`, igual que un login normal.
 
 ### `AuthLayout`
 
