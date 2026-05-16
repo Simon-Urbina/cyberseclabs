@@ -39,8 +39,15 @@ export class AuthService {
     username: string,
     email: string,
     passwordHash: string,
+    privacyPolicyVersion: string,
   ): Promise<{ user: User; token: string }> {
-    const user = await UserDAO.create({ username, email, passwordHash })
+    const user = await UserDAO.create({
+      username,
+      email,
+      passwordHash,
+      privacyAcceptedAt: new Date(),
+      privacyPolicyVersion,
+    })
     return { user, token: AuthService.generateToken(user) }
   }
 

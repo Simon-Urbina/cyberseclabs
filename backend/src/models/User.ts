@@ -13,6 +13,8 @@ export class User {
     public profileImage: Buffer | null = null,
     public points: number = 0,
     public deletedAt: Date | null = null,
+    public privacyAcceptedAt: Date | null = null,
+    public privacyPolicyVersion: string | null = null,
   ) {}
 
   static validate({ username, email, password }: {

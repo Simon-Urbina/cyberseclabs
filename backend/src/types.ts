@@ -158,3 +158,13 @@ export interface TokenPayload {
   email: string
   role: UserRole
 }
+
+export interface ForumComment {
+  id: string
+  userId: string | null
+  content: string
+  parentId: string | null
+  createdAt: Date
+  updatedAt: Date
+  deletedAt: Date | null
+}

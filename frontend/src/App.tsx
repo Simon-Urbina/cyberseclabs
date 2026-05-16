@@ -15,8 +15,11 @@ import LabPage from './pages/LabPage'
 import PublicProfilePage from './pages/PublicProfilePage'
 import AboutPage from './pages/AboutPage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import TermsOfUsePage from './pages/TermsOfUsePage'
+import ForumPage from './pages/ForumPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ChatWidget from './components/ChatWidget'
+import CookieBanner from './components/CookieBanner'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -81,13 +84,20 @@ function AppShell() {
         {/* About page */}
         <Route path="/about" element={<AboutPage />} />
 
+        {/* Forum */}
+        <Route path="/forum" element={<ForumPage />} />
+
         {/* Privacy policy */}
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+
+        {/* Terms of use */}
+        <Route path="/terms-of-use" element={<TermsOfUsePage />} />
 
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <ChatWidget />
+      <CookieBanner />
     </div>
   )
 }

@@ -11,6 +11,7 @@ const pendingRegistrations = new Map<string, {
   username: string
   email: string
   passwordHash: string
+  privacyPolicyVersion: string
   code: string
   expiresAt: number
 }>()
@@ -21,11 +22,12 @@ function generateCode(): string {
 
 export class AuthController {
   static async register(c: Context) {
-    const { username, email, password } = await c.req.json()
+    const { username, email, password, privacyPolicyVersion } = await c.req.json()
     const prepared = await AuthService.prepareRegistration(username, email, password)
     const code = generateCode()
     pendingRegistrations.set(prepared.email, {
       ...prepared,
+      privacyPolicyVersion: privacyPolicyVersion ?? '1.0',
       code,
       expiresAt: Date.now() + 900_000, // 15 minutos
     })
@@ -48,7 +50,7 @@ export class AuthController {
     if (pending.code !== code.trim())
       return c.json({ error: 'Código incorrecto.' }, 400)
     pendingRegistrations.delete(email.toLowerCase())
-    const { user, token } = await AuthService.createUser(pending.username, pending.email, pending.passwordHash)
+    const { user, token } = await AuthService.createUser(pending.username, pending.email, pending.passwordHash, pending.privacyPolicyVersion)
     return c.json(
       { token, user: { id: user.id, username: user.username, email: user.email, role: user.role } },
       201,

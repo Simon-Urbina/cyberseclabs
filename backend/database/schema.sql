@@ -59,6 +59,10 @@ CREATE TRIGGER users_updated_at_trg
 BEFORE UPDATE ON users
 FOR EACH ROW EXECUTE FUNCTION trg_updated_at();
 
+-- Privacy consent columns (idempotent migration — safe to re-run)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS privacy_accepted_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS privacy_policy_version VARCHAR(10);
+
 -- COURSES -> MODULES -> LABORATORIES
 CREATE TABLE IF NOT EXISTS courses (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -510,3 +514,23 @@ ON CONFLICT DO NOTHING;
 -- 3) score_percent y correct_answers_count se calculan en Services antes de insertar en submissions.
 -- 4) Para preguntas de tipo 'activity_response', Services debe comparar response_text contra user_activity_progress.generated_response.
 -- 5) El trigger trg_award_laboratory_points suma laboratories.points a users.points al completar un laboratorio por primera vez.
+
+-- FORUM COMMENTS
+CREATE TABLE IF NOT EXISTS forum_comments (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    uuid REFERENCES users(id) ON DELETE SET NULL,
+  content    TEXT NOT NULL CHECK (char_length(content) >= 1 AND char_length(content) <= 2000),
+  parent_id  uuid REFERENCES forum_comments(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  deleted_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_forum_comments_parent  ON forum_comments(parent_id);
+CREATE INDEX IF NOT EXISTS idx_forum_comments_user    ON forum_comments(user_id);
+CREATE INDEX IF NOT EXISTS idx_forum_comments_created ON forum_comments(created_at DESC);
+
+DROP TRIGGER IF EXISTS forum_comments_updated_at_trg ON forum_comments;
+CREATE TRIGGER forum_comments_updated_at_trg
+BEFORE UPDATE ON forum_comments
+FOR EACH ROW EXECUTE FUNCTION trg_updated_at();

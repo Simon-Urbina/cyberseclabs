@@ -8,6 +8,7 @@ const FOOTER_COLUMNS = [
     links: [
       { label: 'Cursos', to: '/dashboard' },
       { label: 'Dashboard', to: '/dashboard' },
+      { label: 'Foro', to: '/forum' },
     ],
   },
   {
@@ -22,6 +23,7 @@ const FOOTER_COLUMNS = [
     label: 'Legal',
     links: [
       { label: 'Política de privacidad', to: '/privacy-policy' },
+      { label: 'Términos de uso', to: '/terms-of-use' },
     ],
   },
   {

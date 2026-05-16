@@ -1,19 +1,19 @@
 -- Seed de datos iniciales para la plataforma de ciberseguridad
 -- Ejecutar en Supabase SQL Editor después del schema.sql
 
--- Usuarios de prueba con contraseñas hasheadas (bcrypt)
+-- Usuario admin con consentimiento de tratamiento de datos registrado
 -- Credenciales:
---   admin      → admin@example.com      / Admin1234!
---   estudiante → estudiante@example.com / User1234!
+--   admin → admin@cybersec.com / Admin1234!
 
-INSERT INTO users (username, email, password_hash, role)
+INSERT INTO users (username, email, password_hash, role, privacy_accepted_at, privacy_policy_version)
 VALUES
-  ('admin', 'admin@example.com', '$2b$10$abcdefghijklmnopqrstuvwx.yzABCDEFGHIJKLMNOPQRSTUVWXYZ12', 'admin'),
-  ('estudiante', 'estudiante@example.com', '$2b$10$abcdefghijklmnopqrs.tuvwxyzABCDEFGHIJKLMNOPQR', 'user')
-ON CONFLICT (email) DO UPDATE SET
-  username = EXCLUDED.username,
+  ('admin', 'admin@cybersec.com', '$2b$10$abcdefghijklmnopqrstuvwx.yzABCDEFGHIJKLMNOPQRSTUVWXYZ12', 'admin', now(), '1.0')
+ON CONFLICT (username) DO UPDATE SET
+  email = EXCLUDED.email,
   password_hash = EXCLUDED.password_hash,
-  role = EXCLUDED.role;
+  role = EXCLUDED.role,
+  privacy_accepted_at = COALESCE(users.privacy_accepted_at, EXCLUDED.privacy_accepted_at),
+  privacy_policy_version = COALESCE(users.privacy_policy_version, EXCLUDED.privacy_policy_version);
 
 -- Curso principal
 INSERT INTO courses (slug, title, description, difficulty, is_published, created_by)
@@ -31,14 +31,6 @@ ON CONFLICT (slug) DO UPDATE SET
   description = EXCLUDED.description,
   difficulty = EXCLUDED.difficulty,
   is_published = EXCLUDED.is_published;
-
--- Inscripción del estudiante al curso
-INSERT INTO course_enrollments (user_id, course_id)
-SELECT u.id, c.id
-FROM users u
-CROSS JOIN courses c
-WHERE u.username = 'estudiante' AND c.slug = 'fundamentos-ciberseguridad'
-ON CONFLICT DO NOTHING;
 
 -- Módulo 1: Reconocimiento y Escaneo
 INSERT INTO course_modules (course_id, slug, title, description, position)
@@ -377,6 +369,161 @@ JOIN laboratories l ON q.laboratory_id = l.id
 WHERE l.slug = 'reconocimiento-web' AND q.question_order = 5
 ON CONFLICT (question_id) DO NOTHING;
 
+-- Lab 3: Nikto - Escáner de vulnerabilidades web
+INSERT INTO laboratories (module_id, slug, title, content_markdown, position, estimated_minutes, points, is_published)
+SELECT cm.id,
+  'nikto-web-scanner',
+  'Nikto: Escáner de Vulnerabilidades Web',
+  E'## ¿Qué es Nikto?\n\n**Nikto** es un escáner de vulnerabilidades web de código abierto que analiza servidores web en busca de más de 6700 archivos/programas potencialmente peligrosos, versiones desactualizadas y problemas de configuración.\n\n## Flags esenciales\n\n| Flag | Función |\n|------|---------|\n| `-h` | Especifica el host objetivo |\n| `-p` | Puerto (por defecto 80) |\n| `-o` | Guarda el resultado en un archivo |\n| `-Tuning` | Filtra el tipo de pruebas a ejecutar |\n| `-ssl` | Fuerza escaneo sobre HTTPS |\n\n## Ejemplo básico\n\n```bash\nnikto -h http://10.10.10.1\n```\n\nNikto informa de headers de seguridad ausentes, versiones de software vulnerables, directorios expuestos y más.\n\n## ¿Por qué usarlo?\n\nA diferencia de Gobuster (que solo enumera rutas), Nikto identifica configuraciones inseguras y vulnerabilidades conocidas, lo que lo hace ideal para la fase de reconocimiento activo.\n\n---\nCompleta el quiz y la actividad para ganar **150 puntos**.',
+  3, 20, 150, TRUE
+FROM course_modules cm
+WHERE cm.slug = 'reconocimiento-escaneo'
+ON CONFLICT (module_id, slug) DO UPDATE SET
+  title = EXCLUDED.title,
+  content_markdown = EXCLUDED.content_markdown,
+  position = EXCLUDED.position,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  points = EXCLUDED.points,
+  is_published = EXCLUDED.is_published;
+
+-- Preguntas del Lab 3 (nikto)
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 1, 'multiple_choice', '¿Para qué se usa principalmente Nikto?', 'Nikto es un escáner web que detecta vulnerabilidades conocidas, malas configuraciones y software desactualizado en servidores web.'
+FROM laboratories l WHERE l.slug = 'nikto-web-scanner'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 2, 'multiple_choice', '¿Qué flag de Nikto especifica el host objetivo?', 'El flag -h (host) indica a Nikto la URL o IP del servidor que debe escanear.'
+FROM laboratories l WHERE l.slug = 'nikto-web-scanner'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 3, 'multiple_choice', '¿Cuál es la diferencia principal entre Nikto y Gobuster?', 'Gobuster solo enumera rutas por fuerza bruta. Nikto va más allá: identifica configuraciones inseguras, headers ausentes y vulnerabilidades conocidas en el servidor.'
+FROM laboratories l WHERE l.slug = 'nikto-web-scanner'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 4, 'multiple_choice', '¿Qué header de seguridad HTTP reportaría Nikto como ausente si no está configurado?', 'X-Frame-Options protege contra ataques de clickjacking. Su ausencia es uno de los hallazgos más comunes de Nikto.'
+FROM laboratories l WHERE l.slug = 'nikto-web-scanner'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 5, 'activity_response', 'Ejecuta Nikto sobre el host objetivo. Copia la respuesta generada.', 'nikto -h http://10.10.10.1 es el comando básico para escanear un servidor web con Nikto.'
+FROM laboratories l WHERE l.slug = 'nikto-web-scanner'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+-- Opciones Nikto pregunta 1
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'Detectar vulnerabilidades y malas configuraciones en servidores web', TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'Enumerar directorios por fuerza bruta', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'Escanear puertos TCP/UDP', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'Interceptar y modificar tráfico HTTP', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Opciones Nikto pregunta 2
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, '-h', TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, '-u', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, '-target', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, '-host', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Opciones Nikto pregunta 3
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'Nikto identifica vulnerabilidades conocidas; Gobuster solo enumera rutas', TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'Gobuster es más rápido y completo que Nikto', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'Nikto escanea puertos; Gobuster escanea aplicaciones', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'Son exactamente lo mismo con diferente nombre', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Opciones Nikto pregunta 4
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'X-Frame-Options', TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'Content-Type', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'Accept-Encoding', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'Transfer-Encoding', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Actividad Nikto pregunta 5
+INSERT INTO question_activities (question_id, title, instructions_markdown, expected_action_key, success_feedback, is_published)
+SELECT q.id,
+  'Escaneo de vulnerabilidades con Nikto',
+  E'## Objetivo\n\nUsa Nikto para escanear el servidor web objetivo y detectar vulnerabilidades y malas configuraciones.\n\n## Instrucciones\n\n```bash\nnikto -h http://10.10.10.1\n```\n\nNikto analizará el servidor y mostrará:\n- Headers de seguridad ausentes\n- Versiones de software con CVEs conocidos\n- Directorios y archivos sensibles expuestos\n\nCopia la **respuesta generada** y úsala en la pregunta del quiz.',
+  'nikto -h http://10.10.10.1',
+  '¡Bien hecho! Has ejecutado un escaneo Nikto. Copia esta respuesta para el quiz.',
+  TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'nikto-web-scanner' AND q.question_order = 5
+ON CONFLICT (question_id) DO NOTHING;
+
 -- Módulo 2: Vulnerabilidades Web
 INSERT INTO course_modules (course_id, slug, title, description, position)
 SELECT c.id, 'vulnerabilidades-web', 'Vulnerabilidades Web', 'Aprende a identificar y explotar las vulnerabilidades web más comunes del OWASP Top 10.', 2
@@ -387,7 +534,7 @@ ON CONFLICT (course_id, slug) DO UPDATE SET
   description = EXCLUDED.description,
   position = EXCLUDED.position;
 
--- Lab 3: Introducción a Mimikatz
+-- Lab 4 (Módulo 2, posición 1): Introducción a Mimikatz
 INSERT INTO laboratories (module_id, slug, title, content_markdown, position, estimated_minutes, points, is_published)
 SELECT cm.id,
   'mimikatz-intro',
@@ -404,7 +551,7 @@ ON CONFLICT (module_id, slug) DO UPDATE SET
   points = EXCLUDED.points,
   is_published = EXCLUDED.is_published;
 
--- Preguntas del Lab 3
+-- Preguntas del Lab 4 (mimikatz-intro)
 INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
 SELECT l.id, 1, 'multiple_choice', '¿Qué proceso de Windows contiene las credenciales que Mimikatz extrae de memoria?', 'LSASS (Local Security Authority Subsystem Service) es el proceso responsable de la autenticación en Windows y almacena credenciales en memoria.'
 FROM laboratories l WHERE l.slug = 'mimikatz-intro'
@@ -430,7 +577,7 @@ SELECT l.id, 5, 'activity_response', 'Ejecuta Mimikatz para habilitar el privile
 FROM laboratories l WHERE l.slug = 'mimikatz-intro'
 ON CONFLICT (laboratory_id, question_order) DO NOTHING;
 
--- Opciones para Lab 3 pregunta 1
+-- Opciones Lab mimikatz-intro pregunta 1
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 1, 'LSASS (Local Security Authority Subsystem Service)', TRUE
 FROM laboratory_questions q
@@ -459,7 +606,7 @@ JOIN laboratories l ON q.laboratory_id = l.id
 WHERE l.slug = 'mimikatz-intro' AND q.question_order = 1
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
--- Opciones para Lab 3 pregunta 2
+-- Opciones Lab mimikatz-intro pregunta 2
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 1, 'Benjamin Delpy', TRUE
 FROM laboratory_questions q
@@ -488,7 +635,7 @@ JOIN laboratories l ON q.laboratory_id = l.id
 WHERE l.slug = 'mimikatz-intro' AND q.question_order = 2
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
--- Opciones para Lab 3 pregunta 3
+-- Opciones Lab mimikatz-intro pregunta 3
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 1, 'SeDebugPrivilege', TRUE
 FROM laboratory_questions q
@@ -517,7 +664,7 @@ JOIN laboratories l ON q.laboratory_id = l.id
 WHERE l.slug = 'mimikatz-intro' AND q.question_order = 3
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
--- Opciones para Lab 3 pregunta 4
+-- Opciones Lab mimikatz-intro pregunta 4
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 1, 'sekurlsa', TRUE
 FROM laboratory_questions q
@@ -546,7 +693,7 @@ JOIN laboratories l ON q.laboratory_id = l.id
 WHERE l.slug = 'mimikatz-intro' AND q.question_order = 4
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
--- Actividad para Lab 3 pregunta 5
+-- Actividad Lab mimikatz-intro pregunta 5
 INSERT INTO question_activities (question_id, title, instructions_markdown, expected_action_key, success_feedback, is_published)
 SELECT q.id,
   'Extracción de credenciales con Mimikatz',
@@ -559,10 +706,15 @@ JOIN laboratories l ON q.laboratory_id = l.id
 WHERE l.slug = 'mimikatz-intro' AND q.question_order = 5
 ON CONFLICT (question_id) DO NOTHING;
 
--- Lab 4: Mimikatz Avanzado
+-- Fix: eliminar el lab con slug incorrecto antes de insertar el correcto
+DELETE FROM laboratories
+WHERE slug = 'sql-injection-basico'
+  AND module_id = (SELECT id FROM course_modules WHERE slug = 'vulnerabilidades-web');
+
+-- Lab 5 (Módulo 2, posición 2): Mimikatz Avanzado
 INSERT INTO laboratories (module_id, slug, title, content_markdown, position, estimated_minutes, points, is_published)
 SELECT cm.id,
-  'sql-injection-basico',
+  'mimikatz-avanzado',
   'Mimikatz Avanzado',
   E'## Técnicas avanzadas con Mimikatz\n\nUna vez que dominas la extracción básica de credenciales, Mimikatz ofrece técnicas avanzadas para moverse lateralmente y escalar privilegios dentro de un dominio de Active Directory.\n\n## Pass-the-Hash (PtH)\n\nPermite autenticarse usando solo el hash NTLM, sin conocer la contraseña en texto plano.\n\n```\nmimikatz # sekurlsa::pth /user:Administrador /domain:CORP /ntlm:<hash> /run:cmd.exe\n```\n\n## Golden Ticket\n\nForja un Ticket Granting Ticket (TGT) de Kerberos falso con vigencia arbitraria, usando el hash del account KRBTGT.\n\n```\nmimikatz # kerberos::golden /user:Administrador /domain:corp.local /sid:<SID> /krbtgt:<hash> /ticket:golden.kirbi\n```\n\n## DCSync\n\nSimula un controlador de dominio para replicar los hashes de todos los usuarios del dominio sin necesidad de ejecutar código en el DC.\n\n```\nmimikatz # lsadump::dcsync /domain:corp.local /user:krbtgt\n```\n\n---\nCompleta el quiz y la actividad para ganar **300 puntos**.',
   2, 30, 300, TRUE
@@ -576,149 +728,133 @@ ON CONFLICT (module_id, slug) DO UPDATE SET
   points = EXCLUDED.points,
   is_published = EXCLUDED.is_published;
 
--- Preguntas del Lab 4
+-- Preguntas del Lab 5 (mimikatz-avanzado)
 INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
 SELECT l.id, 1, 'multiple_choice', '¿Qué técnica permite autenticarse en Windows usando solo el hash NTLM sin conocer la contraseña?', 'Pass-the-Hash (PtH) explota el protocolo NTLM, que acepta el hash directamente en el proceso de autenticación sin necesitar la contraseña original.'
-FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+FROM laboratories l WHERE l.slug = 'mimikatz-avanzado'
 ON CONFLICT (laboratory_id, question_order) DO NOTHING;
 
 INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
 SELECT l.id, 2, 'multiple_choice', '¿Qué cuenta de Active Directory se compromete para crear un Golden Ticket?', 'KRBTGT es la cuenta de servicio usada por el KDC (Key Distribution Center) de Kerberos. Su hash permite forjar TGTs válidos para cualquier usuario del dominio.'
-FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+FROM laboratories l WHERE l.slug = 'mimikatz-avanzado'
 ON CONFLICT (laboratory_id, question_order) DO NOTHING;
 
 INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
 SELECT l.id, 3, 'multiple_choice', '¿Qué módulo de Mimikatz implementa el ataque DCSync?', 'lsadump::dcsync simula la replicación de un DC usando el protocolo MS-DRSR, permitiendo obtener los hashes de contraseñas de cualquier cuenta del dominio.'
-FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+FROM laboratories l WHERE l.slug = 'mimikatz-avanzado'
 ON CONFLICT (laboratory_id, question_order) DO NOTHING;
 
 INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
 SELECT l.id, 4, 'multiple_choice', '¿Qué tipo de ticket de Kerberos forja un ataque Golden Ticket?', 'Un TGT (Ticket Granting Ticket) es el ticket inicial que emite el KDC tras la autenticación. Un Golden Ticket es un TGT falso que permite acceder a cualquier servicio del dominio.'
-FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+FROM laboratories l WHERE l.slug = 'mimikatz-avanzado'
 ON CONFLICT (laboratory_id, question_order) DO NOTHING;
 
 INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
 SELECT l.id, 5, 'activity_response', 'Usa Mimikatz para realizar un DCSync y extraer el hash de la cuenta krbtgt. Copia la respuesta generada.', 'lsadump::dcsync /domain:corp.local /user:krbtgt replica las credenciales del DC sin ejecutar código en él.'
-FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+FROM laboratories l WHERE l.slug = 'mimikatz-avanzado'
 ON CONFLICT (laboratory_id, question_order) DO NOTHING;
 
--- Opciones para Lab 4 pregunta 1
+-- Opciones Lab mimikatz-avanzado pregunta 1
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 1, 'Pass-the-Hash (PtH)', TRUE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 1
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 2, 'Golden Ticket', FALSE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 1
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 3, 'DCSync', FALSE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 1
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 4, 'Kerberoasting', FALSE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 1
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
--- Opciones para Lab 4 pregunta 2
+-- Opciones Lab mimikatz-avanzado pregunta 2
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 1, 'KRBTGT', TRUE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 2
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 2, 'Administrator', FALSE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 2
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 3, 'SYSTEM', FALSE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 2
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 4, 'Guest', FALSE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 2
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
--- Opciones para Lab 4 pregunta 3
+-- Opciones Lab mimikatz-avanzado pregunta 3
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 1, 'lsadump', TRUE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 3
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 2, 'sekurlsa', FALSE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 3
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 3, 'kerberos', FALSE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 3
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 4, 'token', FALSE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 3
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
--- Opciones para Lab 4 pregunta 4
+-- Opciones Lab mimikatz-avanzado pregunta 4
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 1, 'TGT (Ticket Granting Ticket)', TRUE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 4
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 2, 'TGS (Ticket Granting Service)', FALSE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 4
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 3, 'ST (Service Ticket)', FALSE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 4
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
 INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
 SELECT q.id, 4, 'PAC (Privilege Attribute Certificate)', FALSE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
-WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 4
 ON CONFLICT (question_id, option_order) DO NOTHING;
 
--- Actividad para Lab 4 pregunta 5
+-- Actividad Lab mimikatz-avanzado pregunta 5
 INSERT INTO question_activities (question_id, title, instructions_markdown, expected_action_key, success_feedback, is_published)
 SELECT q.id,
   'DCSync: extracción de hash KRBTGT',
@@ -726,7 +862,316 @@ SELECT q.id,
   'lsadump::dcsync /domain:corp.local /user:krbtgt',
   '¡Excelente! Has realizado un DCSync exitoso. Copia esta respuesta para el quiz.',
   TRUE
-FROM laboratory_questions q
-JOIN laboratories l ON q.laboratory_id = l.id
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'mimikatz-avanzado' AND q.question_order = 5
+ON CONFLICT (question_id) DO NOTHING;
+
+-- Lab 6 (Módulo 2, posición 3): SQL Injection básico
+INSERT INTO laboratories (module_id, slug, title, content_markdown, position, estimated_minutes, points, is_published)
+SELECT cm.id,
+  'sql-injection-basico',
+  'SQL Injection Básico',
+  E'## ¿Qué es SQL Injection?\n\n**SQL Injection (SQLi)** es una vulnerabilidad que permite a un atacante interferir en las consultas que una aplicación realiza a su base de datos. Es consistentemente una de las vulnerabilidades más críticas del **OWASP Top 10**.\n\n## ¿Cómo funciona?\n\nCuando la aplicación construye una consulta SQL concatenando directamente datos del usuario:\n\n```sql\nSELECT * FROM users WHERE username = ''admin'' AND password = ''1234'';\n```\n\nUn atacante puede inyectar:\n\n```\nusername: admin''--\n```\n\nResultando en:\n\n```sql\nSELECT * FROM users WHERE username = ''admin''--'' AND password = ''...''\n```\n\nEl `--` comenta el resto, saltándose la verificación de contraseña.\n\n## Tipos principales\n\n| Tipo | Descripción |\n|------|-------------|\n| **Error-based** | Extrae datos mediante mensajes de error |\n| **Union-based** | Usa UNION SELECT para recuperar datos de otras tablas |\n| **Blind (boolean)** | Infiere datos por respuestas verdadero/falso |\n| **Time-based** | Usa delays (SLEEP) para inferir información |\n\n## sqlmap: automatización\n\n```bash\nsqlmap -u "http://10.10.10.1/login.php?id=1" --dbs\n```\n\n---\nCompleta el quiz y la actividad para ganar **200 puntos**.',
+  3, 30, 200, TRUE
+FROM course_modules cm
+WHERE cm.slug = 'vulnerabilidades-web'
+ON CONFLICT (module_id, slug) DO UPDATE SET
+  title = EXCLUDED.title,
+  content_markdown = EXCLUDED.content_markdown,
+  position = EXCLUDED.position,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  points = EXCLUDED.points,
+  is_published = EXCLUDED.is_published;
+
+-- Preguntas Lab sql-injection-basico
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 1, 'multiple_choice', '¿En qué categoría del OWASP Top 10 (2021) se encuentra SQL Injection?', 'SQL Injection está dentro de "A03:2021 – Injection", que agrupa vulnerabilidades donde datos no confiables son enviados como parte de un comando o consulta.'
+FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 2, 'multiple_choice', E'¿Qué hace el payload \' OR 1=1-- en un formulario de login vulnerable?', 'La condición OR 1=1 siempre es verdadera, haciendo que la consulta devuelva todos los registros. El -- comenta el resto de la consulta, saltándose la verificación de contraseña.'
+FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 3, 'multiple_choice', '¿Qué tipo de SQLi infiere información basándose en respuestas verdadero/falso de la aplicación?', 'El Blind Boolean-based SQLi no recibe datos directamente, sino que hace preguntas y deduce la respuesta por el comportamiento de la aplicación.'
+FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 4, 'multiple_choice', '¿Qué herramienta automatiza la detección y explotación de SQL Injection?', 'sqlmap es la herramienta estándar para automatizar SQLi. Detecta el tipo de inyección, extrae bases de datos, tablas y datos, y puede obtener una shell del sistema.'
+FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 5, 'activity_response', 'Usa sqlmap para enumerar las bases de datos del objetivo. Copia la respuesta generada.', 'sqlmap -u "http://10.10.10.1/login.php?id=1" --dbs enumera todas las bases de datos accesibles.'
+FROM laboratories l WHERE l.slug = 'sql-injection-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+-- Opciones SQLi pregunta 1
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'A03 – Injection', TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'A01 – Broken Access Control', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'A07 – Identification and Authentication Failures', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'A05 – Security Misconfiguration', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Opciones SQLi pregunta 2
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'Omite la verificación de contraseña autenticando como cualquier usuario', TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'Elimina todos los registros de la tabla users', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'Crea un nuevo usuario administrador', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'Muestra un error de sintaxis SQL', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Opciones SQLi pregunta 3
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'Blind Boolean-based', TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'Union-based', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'Error-based', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'Out-of-band', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Opciones SQLi pregunta 4
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'sqlmap', TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'Burp Suite', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'Metasploit', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'Hydra', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'sql-injection-basico' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Actividad SQLi pregunta 5
+INSERT INTO question_activities (question_id, title, instructions_markdown, expected_action_key, success_feedback, is_published)
+SELECT q.id,
+  'Enumeración de bases de datos con sqlmap',
+  E'## Objetivo\n\nUsa sqlmap para detectar y explotar una inyección SQL en el objetivo, enumerando las bases de datos disponibles.\n\n## Instrucciones\n\n```bash\nsqlmap -u "http://10.10.10.1/login.php?id=1" --dbs\n```\n\n- `-u`: URL objetivo con el parámetro vulnerable\n- `--dbs`: enumera todas las bases de datos\n\nsqlmap detectará automáticamente el tipo de inyección y extraerá la información. Copia la **respuesta generada** y úsala en la pregunta del quiz.',
+  'sqlmap -u "http://10.10.10.1/login.php?id=1" --dbs',
+  '¡Correcto! Has enumerado las bases de datos con sqlmap. Copia esta respuesta para el quiz.',
+  TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
 WHERE l.slug = 'sql-injection-basico' AND q.question_order = 5
+ON CONFLICT (question_id) DO NOTHING;
+
+-- Lab 7 (Módulo 2, posición 4): XSS básico
+INSERT INTO laboratories (module_id, slug, title, content_markdown, position, estimated_minutes, points, is_published)
+SELECT cm.id,
+  'xss-basico',
+  'XSS: Cross-Site Scripting',
+  E'## ¿Qué es XSS?\n\n**Cross-Site Scripting (XSS)** es una vulnerabilidad que permite a un atacante inyectar scripts maliciosos en páginas web vistas por otros usuarios. Aparece en el **OWASP Top 10** como A03:2021 – Injection.\n\n## Tipos de XSS\n\n| Tipo | Descripción |\n|------|-------------|\n| **Reflected** | El script viene en la request y se refleja en la respuesta inmediata |\n| **Stored** | El script se guarda en la BD y afecta a todos los usuarios que lo ven |\n| **DOM-based** | La vulnerabilidad está en el JavaScript del cliente, no en el servidor |\n\n## Payload básico\n\n```html\n<script>alert(''XSS'')</script>\n```\n\nSi la aplicación no sanitiza la entrada y este código aparece ejecutado en el navegador, existe XSS.\n\n## Impacto real\n\n- Robo de cookies de sesión (`document.cookie`)\n- Redirección a sitios maliciosos\n- Keylogging en la página\n- Defacement del sitio\n\n## Herramienta: XSStrike\n\n```bash\npython3 xsstrike.py -u "http://10.10.10.1/search?q=test"\n```\n\n---\nCompleta el quiz y la actividad para ganar **200 puntos**.',
+  4, 30, 200, TRUE
+FROM course_modules cm
+WHERE cm.slug = 'vulnerabilidades-web'
+ON CONFLICT (module_id, slug) DO UPDATE SET
+  title = EXCLUDED.title,
+  content_markdown = EXCLUDED.content_markdown,
+  position = EXCLUDED.position,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  points = EXCLUDED.points,
+  is_published = EXCLUDED.is_published;
+
+-- Preguntas Lab xss-basico
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 1, 'multiple_choice', '¿Qué tipo de XSS almacena el payload en la base de datos del servidor?', 'El XSS Stored (persistente) guarda el script en el servidor. Cada vez que un usuario visita la página afectada, el script se ejecuta en su navegador.'
+FROM laboratories l WHERE l.slug = 'xss-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 2, 'multiple_choice', '¿Cuál es el impacto más crítico de un XSS exitoso?', 'El robo de cookies de sesión permite al atacante secuestrar la sesión del usuario (session hijacking) sin necesitar sus credenciales.'
+FROM laboratories l WHERE l.slug = 'xss-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 3, 'multiple_choice', '¿Qué propiedad de JavaScript se usa en XSS para robar cookies de sesión?', 'document.cookie contiene todas las cookies del sitio actual. Un payload malicioso puede exfiltrarlas al atacante.'
+FROM laboratories l WHERE l.slug = 'xss-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 4, 'multiple_choice', '¿Qué medida de defensa impide que el navegador ejecute scripts inyectados?', 'Content Security Policy (CSP) es un header HTTP que indica al navegador qué fuentes de scripts son válidas, bloqueando la ejecución de scripts inline inyectados.'
+FROM laboratories l WHERE l.slug = 'xss-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+INSERT INTO laboratory_questions (laboratory_id, question_order, question_type, question_text, explanation)
+SELECT l.id, 5, 'activity_response', 'Usa XSStrike para detectar XSS en el parámetro de búsqueda del objetivo. Copia la respuesta generada.', 'python3 xsstrike.py -u "http://10.10.10.1/search?q=test" analiza el parámetro q en busca de XSS.'
+FROM laboratories l WHERE l.slug = 'xss-basico'
+ON CONFLICT (laboratory_id, question_order) DO NOTHING;
+
+-- Opciones XSS pregunta 1
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'Stored (Persistente)', TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'Reflected', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'DOM-based', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'Blind', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 1
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Opciones XSS pregunta 2
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'Robo de cookies de sesión (session hijacking)', TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'Modificar la base de datos del servidor', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'Escanear puertos del servidor', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'Ejecutar comandos en el sistema operativo del servidor', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 2
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Opciones XSS pregunta 3
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'document.cookie', TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'window.localStorage', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'navigator.userAgent', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'document.title', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 3
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Opciones XSS pregunta 4
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 1, 'Content Security Policy (CSP)', TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 2, 'CORS (Cross-Origin Resource Sharing)', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 3, 'SSL/TLS', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+INSERT INTO laboratory_question_options (question_id, option_order, option_text, is_correct)
+SELECT q.id, 4, 'HTTP Strict-Transport-Security (HSTS)', FALSE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 4
+ON CONFLICT (question_id, option_order) DO NOTHING;
+
+-- Actividad XSS pregunta 5
+INSERT INTO question_activities (question_id, title, instructions_markdown, expected_action_key, success_feedback, is_published)
+SELECT q.id,
+  'Detección de XSS con XSStrike',
+  E'## Objetivo\n\nUsa XSStrike para detectar vulnerabilidades XSS en el parámetro de búsqueda del servidor objetivo.\n\n## Instrucciones\n\n```bash\npython3 xsstrike.py -u "http://10.10.10.1/search?q=test"\n```\n\n- XSStrike analiza el parámetro `q` con múltiples payloads\n- Detecta si la aplicación refleja el input sin sanitizar\n- Genera payloads que evaden filtros básicos\n\nCopia la **respuesta generada** y úsala en la pregunta del quiz.',
+  'python3 xsstrike.py -u "http://10.10.10.1/search?q=test"',
+  '¡Muy bien! Has detectado XSS con XSStrike. Copia esta respuesta para el quiz.',
+  TRUE
+FROM laboratory_questions q JOIN laboratories l ON q.laboratory_id = l.id
+WHERE l.slug = 'xss-basico' AND q.question_order = 5
 ON CONFLICT (question_id) DO NOTHING;

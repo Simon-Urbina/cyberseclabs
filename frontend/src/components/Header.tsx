@@ -42,6 +42,14 @@ export default function Header() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
+            <Link
+              to="/forum"
+              className={`nav-link text-[14px] tracking-wide font-medium transition-colors ${
+                isDark ? 'text-violet-300 hover:text-rosewood-400' : 'text-rosewood-700 hover:text-rosewood-500'
+              }`}
+            >
+              Foro
+            </Link>
             <ThemeToggle />
 
             {user ? (
@@ -136,6 +144,17 @@ export default function Header() {
               >
                 <span className="opacity-70 cursor-blink">~/</span>{user.username}
               </div>
+              <Link
+                to="/forum"
+                onClick={() => setMenuOpen(false)}
+                className={`block w-full text-center px-4 py-3 rounded-xl text-[15px] font-medium tracking-wide transition-all duration-300 border ${
+                  isDark
+                    ? 'text-violet-300 border-violet-300/20 hover:bg-white/5'
+                    : 'text-rosewood-700 border-rosewood-700/20 hover:bg-black/5'
+                }`}
+              >
+                Foro
+              </Link>
               <button
                 onClick={handleLogout}
                 className={`w-full px-4 py-3 text-[15px] font-medium tracking-wide transition-colors rounded-xl ${
@@ -148,11 +167,22 @@ export default function Header() {
           ) : (
             <div className="flex flex-col gap-3 pt-2">
               <Link
+                to="/forum"
+                onClick={() => setMenuOpen(false)}
+                className={`block w-full text-center px-4 py-3 rounded-xl text-[15px] font-medium tracking-wide transition-all duration-300 border ${
+                  isDark
+                    ? 'text-violet-300 border-violet-300/20 hover:bg-white/5'
+                    : 'text-rosewood-700 border-rosewood-700/20 hover:bg-black/5'
+                }`}
+              >
+                Foro
+              </Link>
+              <Link
                 to="/login"
                 onClick={() => setMenuOpen(false)}
                 className={`block w-full text-center px-4 py-3 rounded-xl text-[15px] font-medium tracking-wide transition-all duration-300 border ${
-                  isDark 
-                    ? 'text-violet-300 border-violet-300/20 hover:bg-white/5' 
+                  isDark
+                    ? 'text-violet-300 border-violet-300/20 hover:bg-white/5'
                     : 'text-rosewood-700 border-rosewood-700/20 hover:bg-black/5'
                 }`}
               >

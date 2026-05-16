@@ -1,3 +1,12 @@
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 import { CourseDAO } from '../daos/CourseDAO.js'
 import { CourseModuleDAO } from '../daos/CourseModuleDAO.js'
 import { CourseEnrollmentDAO } from '../daos/CourseEnrollmentDAO.js'
@@ -98,7 +107,7 @@ export class CourseService {
             questionType: q.questionType,
             questionText: q.questionText,
             explanation: q.explanation,
-            options: options.map((o) => ({
+            options: shuffle(options).map((o) => ({
               id: o.id,
               optionOrder: o.optionOrder,
               optionText: o.optionText,

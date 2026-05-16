@@ -19,7 +19,7 @@ const SECTIONS = [
             { k: 'Nombre', v: 'Simón Jacobo Urbina Martínez' },
             { k: 'Institución', v: 'Universidad Santo Tomás — Tunja, Colombia' },
             { k: 'Proyecto', v: 'Semillero de Investigación en Ciberseguridad y Desarrollo de Software' },
-            { k: 'Correo de contacto', v: 'hola@cyberseclabs.app' },
+            { k: 'Correo de contacto', v: 'jacobitourbinalol@gmail.com' },
             { k: 'Sitio web', v: 'https://cyberseclabs.vercel.app' },
           ].map(({ k, v }) => (
             <p key={k} className="font-mono text-[13px]">
@@ -139,7 +139,7 @@ const SECTIONS = [
               desc: 'Usado exclusivamente para enviar correos de verificación de cuenta y restablecimiento de contraseña. No se almacena ningún dato de usuario en los servidores de Google.',
               url: 'https://policies.google.com/privacy',
             },
-          ].map(({ name, role, desc, url }) => (
+          ].map(({ name, role, desc, url: providerUrl }) => (
             <div key={name} className="rounded-xl p-5" style={{ background: 'rgba(26,63,150,0.05)', border: '1px solid rgba(26,63,150,0.12)' }}>
               <div className="flex items-start justify-between gap-4 flex-wrap mb-2">
                 <div>
@@ -148,7 +148,7 @@ const SECTIONS = [
                     {role}
                   </span>
                 </div>
-                <a href={url} target="_blank" rel="noopener noreferrer" className="font-mono text-[11px] transition-colors" style={{ color: '#2596be' }}
+                <a href={providerUrl} target="_blank" rel="noopener noreferrer" className="font-mono text-[11px] transition-colors" style={{ color: '#2596be' }}
                   onMouseEnter={e => (e.currentTarget.style.color = '#F5C500')}
                   onMouseLeave={e => (e.currentTarget.style.color = '#2596be')}>
                   Ver política →
@@ -157,6 +157,27 @@ const SECTIONS = [
               <p className="text-[13px] leading-relaxed" style={{ color: '#6b7280' }}>{desc}</p>
             </div>
           ))}
+        </div>
+
+        <div className="mt-5 space-y-3">
+          <div className="rounded-xl px-5 py-4" style={{ background: 'rgba(26,63,150,0.06)', border: '1px solid rgba(26,63,150,0.14)' }}>
+            <p className="font-mono text-[11px] tracking-[0.14em] uppercase mb-2" style={{ color: '#F5C500' }}>// transferencia internacional de datos</p>
+            <p className="text-[14px] leading-relaxed" style={{ color: '#6b7280' }}>
+              Los servidores de Supabase (AWS us-east-1), Railway y Vercel se encuentran en Estados Unidos,
+              país que no cuenta con declaración de adecuación por parte de Colombia. La transferencia
+              internacional de tus datos se realiza sobre la base de la <strong>autorización expresa</strong> que
+              otorgas al aceptar esta política durante el registro, conforme al artículo 26 de la Ley 1581 de 2012.
+            </p>
+          </div>
+          <div className="rounded-xl px-5 py-4" style={{ background: 'rgba(26,63,150,0.06)', border: '1px solid rgba(26,63,150,0.14)' }}>
+            <p className="font-mono text-[11px] tracking-[0.14em] uppercase mb-2" style={{ color: '#F5C500' }}>// retención de datos</p>
+            <p className="text-[14px] leading-relaxed" style={{ color: '#6b7280' }}>
+              Tus datos se conservan mientras tu cuenta esté activa. Si solicitas la eliminación, tu cuenta
+              se marcará como inactiva (<em>soft delete</em>) durante <strong>90 días</strong> —período
+              en el que puedes solicitar su restauración— tras los cuales los datos personales identificables
+              serán eliminados permanentemente de nuestros sistemas.
+            </p>
+          </div>
         </div>
       </>
     ),
@@ -207,6 +228,7 @@ const SECTIONS = [
             ['Rectificación', 'Corregir datos inexactos, incompletos o desactualizados accediendo a "Editar perfil" o contactándonos directamente.'],
             ['Supresión', 'Solicitar la eliminación de tus datos cuando consideres que no son tratados conforme a la ley o que ya no son necesarios. Esto implica la desactivación (soft delete) de tu cuenta.'],
             ['Revocación del consentimiento', 'Retirar en cualquier momento el consentimiento que hayas otorgado para el tratamiento de tus datos, sin que ello afecte la licitud del tratamiento previo.'],
+            ['Prueba de autorización', 'Solicitar prueba de la autorización que otorgaste para el tratamiento de tus datos personales, conforme al artículo 8(c) de la Ley 1581 de 2012.'],
             ['Queja ante la autoridad', 'Presentar una queja ante la Superintendencia de Industria y Comercio (SIC) si consideras que se han vulnerado tus derechos.'],
           ].map(([right, desc]) => (
             <div key={right as string} className="flex gap-4">
@@ -262,11 +284,11 @@ const SECTIONS = [
       <>
         <p>
           CyberSec Labs está diseñada principalmente para estudiantes universitarios y personas mayores de
-          <strong> 14 años</strong>. No recopilamos intencionalmente datos de menores de 14 años sin el
-          consentimiento verificado de su representante legal.
+          <strong> 18 años</strong>. Conforme al artículo 7 de la Ley 1581 de 2012, no recopilamos
+          intencionalmente datos de menores de 18 años sin el consentimiento verificado de su representante legal.
         </p>
         <p className="mt-3">
-          Si eres padre, madre o tutor y crees que tu hijo menor de 14 años ha creado una cuenta sin tu
+          Si eres padre, madre o tutor y crees que tu hijo menor de 18 años ha creado una cuenta sin tu
           consentimiento, contáctanos para proceder con la eliminación de la cuenta y sus datos asociados.
         </p>
       </>
@@ -305,9 +327,8 @@ const SECTIONS = [
         </p>
         <div className="mt-4 space-y-3">
           {[
-            { label: 'Correo electrónico', value: 'hola@cyberseclabs.app', href: 'mailto:hola@cyberseclabs.app' },
+            { label: 'Correo electrónico', value: 'jacobitourbinalol@gmail.com', href: 'mailto:jacobitourbinalol@gmail.com' },
             { label: 'GitHub Issues', value: 'github.com/Simon-Urbina/cyberseclabs/issues', href: 'https://github.com/Simon-Urbina/cyberseclabs/issues' },
-            { label: 'Instagram', value: '@simon__urbina', href: 'https://www.instagram.com/simon__urbina/' },
           ].map(({ label, value, href }) => (
             <div key={label} className="flex items-center gap-4 rounded-xl px-5 py-4" style={{ background: 'rgba(26,63,150,0.05)', border: '1px solid rgba(26,63,150,0.12)' }}>
               <span className="font-mono text-[11px] tracking-[0.1em] uppercase w-36 shrink-0" style={{ color: '#3A5AB8' }}>{label}</span>

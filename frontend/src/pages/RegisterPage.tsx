@@ -83,13 +83,17 @@ export default function RegisterPage() {
   const [pendingEmail, setPendingEmail] = useState('')
   const [code, setCode] = useState('')
   const [resendCooldown, setResendCooldown] = useState(0)
+  const [privacyAccepted, setPrivacyAccepted] = useState(false)
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      const res = await api.post<{ message: string; email: string }>('/api/auth/register', form)
+      const res = await api.post<{ message: string; email: string }>('/api/auth/register', {
+        ...form,
+        privacyPolicyVersion: '1.0',
+      })
       setPendingEmail(res.email)
       setStep('verify')
     } catch (err: any) {
@@ -312,6 +316,39 @@ export default function RegisterPage() {
           isDark={isDark}
         />
 
+        {/* Consentimiento — Ley 1581 de 2012 */}
+        <div className="flex items-start gap-3">
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={privacyAccepted}
+            onClick={() => setPrivacyAccepted(v => !v)}
+            className="mt-0.5 w-5 h-5 shrink-0 rounded flex items-center justify-center transition-all"
+            style={{
+              background: privacyAccepted ? '#1A3F96' : 'transparent',
+              border: `2px solid ${privacyAccepted ? '#1A3F96' : isDark ? 'rgba(26,63,150,0.45)' : 'rgba(26,63,150,0.40)'}`,
+            }}
+          >
+            {privacyAccepted && (
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </button>
+          <p className="text-[13px] leading-relaxed" style={{ color: isDark ? '#7B9FE8' : '#2451C8' }}>
+            He leído y acepto la{' '}
+            <Link
+              to="/privacy-policy"
+              target="_blank"
+              className="font-semibold transition-colors hover:underline"
+              style={{ color: isDark ? '#F5C500' : '#1A3F96' }}
+            >
+              Política de Privacidad
+            </Link>{' '}
+            y autorizo el tratamiento de mis datos personales conforme a la Ley 1581 de 2012 de Colombia.
+          </p>
+        </div>
+
         {error && (
           <div
             className="flex items-start gap-3 px-4 py-3 rounded-xl"
@@ -328,7 +365,7 @@ export default function RegisterPage() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !privacyAccepted}
           className="btn-gold w-full py-4 rounded-xl text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
@@ -337,10 +374,6 @@ export default function RegisterPage() {
             'Crear cuenta gratis'
           )}
         </button>
-
-        <p className="text-xs text-center" style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}>
-          Al registrarte aceptas los términos de uso de la plataforma.
-        </p>
       </form>
     </AuthLayout>
   )

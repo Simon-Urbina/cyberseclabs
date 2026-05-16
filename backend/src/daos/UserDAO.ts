@@ -23,10 +23,22 @@ export class UserDAO {
     return row ?? null
   }
 
-  static async create(data: { username: string; email: string; passwordHash: string }): Promise<User> {
+  static async create(data: {
+    username: string
+    email: string
+    passwordHash: string
+    privacyAcceptedAt?: Date | null
+    privacyPolicyVersion?: string | null
+  }): Promise<User> {
     const [row] = await sql<User[]>`
-      INSERT INTO users (username, email, password_hash)
-      VALUES (${data.username}, ${data.email}, ${data.passwordHash})
+      INSERT INTO users (username, email, password_hash, privacy_accepted_at, privacy_policy_version)
+      VALUES (
+        ${data.username},
+        ${data.email},
+        ${data.passwordHash},
+        ${data.privacyAcceptedAt ?? null},
+        ${data.privacyPolicyVersion ?? null}
+      )
       RETURNING *
     `
     return row
