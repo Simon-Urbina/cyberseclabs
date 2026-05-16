@@ -20,40 +20,28 @@ async function getAccessToken(): Promise<string> {
   return data.access_token
 }
 
-export async function sendVerificationEmail(to: string, username: string, code: string): Promise<void> {
+// RFC 2047 Base64 encoding for MIME headers — required for non-ASCII chars (ñ, —, etc.)
+function encodeHeader(text: string): string {
+  return `=?UTF-8?B?${Buffer.from(text, 'utf-8').toString('base64')}?=`
+}
+
+async function sendRawEmail(to: string, subject: string, html: string): Promise<void> {
   const from = process.env.GMAIL_USER
   if (!from) throw new Error('GMAIL_USER es requerido')
 
   const accessToken = await getAccessToken()
 
-  const subject = 'Verifica tu correo — CyberSec Labs'
-  const html = `
-    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
-      <h2 style="margin:0 0 8px;font-size:22px;color:#0A1545">Verificación de correo</h2>
-      <p style="color:#374151;line-height:1.6">
-        Hola <strong>${username}</strong>, gracias por registrarte en CyberSec Labs.
-        Ingresa el siguiente código en la plataforma para activar tu cuenta. Expira en <strong>15 minutos</strong>.
-      </p>
-      <div style="margin:28px 0;padding:20px 32px;background:#f0f4ff;border-radius:12px;text-align:center;letter-spacing:0.35em;font-size:36px;font-weight:700;font-family:monospace;color:#0A1545;border:1px solid rgba(26,63,150,0.2)">
-        ${code}
-      </div>
-      <p style="color:#6b7280;font-size:13px">
-        Si no creaste esta cuenta, puedes ignorar este correo.
-      </p>
-    </div>
-  `
-
   const mime = [
-    `From: "CyberSec Labs" <${from}>`,
+    `From: =?UTF-8?B?${Buffer.from('CyberSec Labs', 'utf-8').toString('base64')}?= <${from}>`,
     `To: ${to}`,
-    `Subject: ${subject}`,
+    `Subject: ${encodeHeader(subject)}`,
     'MIME-Version: 1.0',
     'Content-Type: text/html; charset=utf-8',
     '',
     html,
   ].join('\r\n')
 
-  const encoded = Buffer.from(mime, 'utf-8')
+  const raw = Buffer.from(mime, 'utf-8')
     .toString('base64')
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
@@ -65,7 +53,7 @@ export async function sendVerificationEmail(to: string, username: string, code: 
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ raw: encoded }),
+    body: JSON.stringify({ raw }),
   })
 
   if (!res.ok) {
@@ -74,60 +62,97 @@ export async function sendVerificationEmail(to: string, username: string, code: 
   }
 }
 
-export async function sendPasswordResetEmail(to: string, resetLink: string): Promise<void> {
-  const from = process.env.GMAIL_USER
-  if (!from) throw new Error('GMAIL_USER es requerido')
+// ─── Shared layout helpers ────────────────────────────────────────────────────
 
-  const accessToken = await getAccessToken()
+function emailHeader(title: string, subtitle: string): string {
+  return `
+    <div style="background:#0A1545;padding:28px 36px">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="width:44px;height:44px;background:#1A3F96;border-radius:10px;text-align:center;vertical-align:middle;font-size:22px">
+            🔐
+          </td>
+          <td style="padding-left:14px;vertical-align:middle">
+            <div style="color:#F5C500;font-family:'Segoe UI',Arial,sans-serif;font-size:19px;font-weight:700;letter-spacing:0.04em;line-height:1.2">CyberSec Labs</div>
+            <div style="color:#3A5AB8;font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;margin-top:3px">// plataforma de aprendizaje</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div style="height:3px;background:linear-gradient(90deg,#F5C500 0%,#2596be 100%);font-size:0;line-height:0">&nbsp;</div>
+    <div style="background:#ffffff;padding:36px 36px 8px">
+      <h2 style="margin:0 0 12px;font-size:22px;color:#0A1545;font-family:'Segoe UI',Arial,sans-serif;font-weight:700">${title}</h2>
+      <p style="margin:0 0 24px;color:#6b7280;font-size:11px;font-family:'Courier New',monospace;letter-spacing:0.1em;text-transform:uppercase">${subtitle}</p>
+    </div>
+  `
+}
 
-  const subject = 'Restablece tu contraseña — CyberSec Labs'
+function emailFooter(note: string): string {
+  return `
+    <div style="background:#ffffff;padding:0 36px 28px">
+      <div style="height:1px;background:#E8EEFA;margin-bottom:20px"></div>
+      <p style="color:#9CA3AF;font-size:12px;font-family:'Segoe UI',Arial,sans-serif;margin:0;line-height:1.7">
+        ${note}
+      </p>
+    </div>
+    <div style="background:#060D1F;padding:14px 36px;text-align:center">
+      <span style="color:#3A5AB8;font-size:11px;font-family:'Courier New',monospace;letter-spacing:0.1em">cyberseclabs.vercel.app</span>
+    </div>
+  `
+}
+
+// ─── Emails ───────────────────────────────────────────────────────────────────
+
+export async function sendVerificationEmail(to: string, username: string, code: string): Promise<void> {
   const html = `
-    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
-      <h2 style="margin:0 0 8px;font-size:22px;color:#0A1545">Restablecer contraseña</h2>
-      <p style="color:#374151;line-height:1.6">
-        Recibimos una solicitud para restablecer la contraseña de tu cuenta en CyberSec Labs.
-        Haz clic en el botón para continuar. El enlace expira en 1 hora.
-      </p>
-      <a href="${resetLink}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#2596be;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">
-        Restablecer contraseña
-      </a>
-      <p style="color:#6b7280;font-size:13px">
-        Si no solicitaste esto, ignora este correo. Tu contraseña no cambiará.
-      </p>
-      <p style="color:#9ca3af;font-size:12px;margin-top:32px">
-        O copia este enlace en tu navegador:<br/>
-        <span style="color:#2596be">${resetLink}</span>
-      </p>
+    <div style="background:#EEF3FC;padding:32px 16px;font-family:'Segoe UI',Arial,sans-serif">
+      <div style="max-width:520px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(10,21,69,0.12)">
+        ${emailHeader('Verificación de correo', '// activa tu cuenta')}
+        <div style="background:#ffffff;padding:0 36px 8px">
+          <p style="color:#374151;line-height:1.7;font-size:15px;font-family:'Segoe UI',Arial,sans-serif;margin:0 0 28px">
+            Hola <strong style="color:#0A1545">${username}</strong>, gracias por unirte a CyberSec Labs.<br/>
+            Ingresa el siguiente código en la plataforma para activar tu cuenta.
+            Expira en <strong>15 minutos</strong>.
+          </p>
+          <div style="margin:0 0 28px;padding:24px 32px;background:#f0f4ff;border-radius:12px;text-align:center;border:1px solid rgba(26,63,150,0.18)">
+            <div style="letter-spacing:0.45em;font-size:38px;font-weight:700;font-family:'Courier New',monospace;color:#0A1545;line-height:1">${code}</div>
+            <div style="color:#1A3F96;font-size:11px;font-family:'Courier New',monospace;letter-spacing:0.1em;margin-top:10px;text-transform:uppercase">código de verificación</div>
+          </div>
+        </div>
+        ${emailFooter('Si no creaste esta cuenta en CyberSec Labs, puedes ignorar este correo de forma segura.')}
+      </div>
     </div>
   `
 
-  const mime = [
-    `From: "CyberSec Labs" <${from}>`,
-    `To: ${to}`,
-    `Subject: ${subject}`,
-    'MIME-Version: 1.0',
-    'Content-Type: text/html; charset=utf-8',
-    '',
-    html,
-  ].join('\r\n')
+  await sendRawEmail(to, 'Verifica tu correo — CyberSec Labs', html)
+}
 
-  const encoded = Buffer.from(mime, 'utf-8')
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '')
+export async function sendPasswordResetEmail(to: string, resetLink: string): Promise<void> {
+  const html = `
+    <div style="background:#EEF3FC;padding:32px 16px;font-family:'Segoe UI',Arial,sans-serif">
+      <div style="max-width:520px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(10,21,69,0.12)">
+        ${emailHeader('Restablecer contraseña', '// solicitud de cambio')}
+        <div style="background:#ffffff;padding:0 36px 8px">
+          <p style="color:#374151;line-height:1.7;font-size:15px;font-family:'Segoe UI',Arial,sans-serif;margin:0 0 28px">
+            Recibimos una solicitud para restablecer la contraseña de tu cuenta en
+            <strong style="color:#0A1545">CyberSec Labs</strong>.
+            Haz clic en el botón para continuar. El enlace expira en <strong>1 hora</strong>.
+          </p>
+          <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px">
+            <tr>
+              <td style="border-radius:10px;background:#F5C500">
+                <a href="${resetLink}"
+                   style="display:inline-block;padding:14px 32px;color:#0A1545;text-decoration:none;font-family:'Segoe UI',Arial,sans-serif;font-weight:700;font-size:15px;border-radius:10px;letter-spacing:0.02em">
+                  Restablecer contraseña →
+                </a>
+              </td>
+            </tr>
+          </table>
+        </div>
+        ${emailFooter('Si no solicitaste este cambio, puedes ignorar este correo. Tu contraseña permanecerá igual.')}
+      </div>
+    </div>
+  `
 
-  const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ raw: encoded }),
-  })
-
-  if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`Gmail API error ${res.status}: ${body}`)
-  }
+  await sendRawEmail(to, 'Restablece tu contraseña — CyberSec Labs', html)
 }

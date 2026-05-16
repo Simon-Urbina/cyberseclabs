@@ -113,7 +113,8 @@ backend/
 │   │   └── index.ts             ← Re-exporta todos los modelos
 │   └── utils/
 │       ├── errors.ts            ← Clases de error personalizadas (HTTPError, ValidationError)
-│       └── response.ts          ← Generador de respuestas para actividades
+│       ├── response.ts          ← Generador de respuestas para actividades
+│       └── email.ts             ← Envío de correos vía Gmail REST API (verificación y reset)
 ├── database/
 │   ├── schema.sql               ← Script SQL que crea todas las tablas
 │   └── seed.sql                 ← Datos de ejemplo para pruebas
@@ -573,8 +574,37 @@ const resetTokens = new Map<string, { userId: string; expiresAt: number }>()
 - El token es un UUID aleatorio (`crypto.randomUUID()`).
 - Expira en **1 hora** (`Date.now() + 3_600_000`).
 - Al reiniciar el servidor, todos los tokens pendientes se pierden.
-- El enlace de reset (`${FRONTEND_URL}/reset-password?token=...`) se envía por correo usando la **Gmail REST API con OAuth2** (`src/utils/email.ts`). No usa SMTP — usa HTTPS directamente, lo que es compatible con plataformas cloud como Railway que bloquean puertos SMTP.
+- El enlace de reset se construye como `${FRONTEND_URL}/reset-password?token=...`. **`FRONTEND_URL` debe configurarse como variable de entorno en Railway** (`https://cyberseclabs.vercel.app`); si no está definida, el fallback es `http://localhost:5173`.
+- El correo se envía con `sendPasswordResetEmail()` del módulo `src/utils/email.ts` usando la Gmail REST API con OAuth2. No usa SMTP — usa HTTPS directamente, compatible con Railway que bloquea puertos SMTP salientes.
 - Se usa la misma respuesta para correos registrados y no registrados, evitando *email enumeration*.
+
+### 7.5 Módulo de correo (`src/utils/email.ts`)
+
+Centraliza todo el envío de correos. Está organizado en helpers internos y dos funciones exportadas:
+
+**Helpers internos:**
+
+| Función | Descripción |
+|---|---|
+| `getAccessToken()` | Obtiene el access token OAuth2 de Google usando el refresh token configurado en `.env` |
+| `encodeHeader(text)` | Codifica texto con caracteres no-ASCII (ñ, —, acentos) usando **RFC 2047 Base64** (`=?UTF-8?B?...?=`). Requerido para que los asuntos con tildes lleguen correctamente |
+| `sendRawEmail(to, subject, html)` | Construye el mensaje MIME, lo codifica en base64url y lo envía vía Gmail API. Usado por ambas funciones exportadas para evitar duplicación |
+| `emailHeader(title, subtitle)` | Genera el bloque HTML de cabecera de todos los correos: fondo `#0A1545`, logo 🔐, nombre en amarillo `#F5C500`, subtítulo monoespacio, barra de degradado amarillo→cyan |
+| `emailFooter(note)` | Genera el bloque HTML de pie de todos los correos: nota legal en gris, barra oscura `#060D1F` con la URL de la plataforma |
+
+**Funciones exportadas:**
+
+```typescript
+sendVerificationEmail(to, username, code)   // Registro — código de 6 dígitos
+sendPasswordResetEmail(to, resetLink)        // Contraseña olvidada — botón con enlace
+```
+
+Ambas comparten la misma estructura visual:
+- Fondo exterior `#EEF3FC` (igual al tema claro del sitio)
+- Tarjeta con borde redondeado y sombra
+- Header unificado con branding de CyberSec Labs
+- Cuerpo blanco con contenido específico de cada correo
+- Footer oscuro con URL de la plataforma
 
 ### 7.4 Middleware de Autenticación
 
@@ -941,7 +971,7 @@ El backend necesita las siguientes variables en el archivo `.env` (o en Railway)
 | `JWT_SECRET` | ✅ | Clave secreta para firmar y verificar tokens JWT. Debe ser larga y aleatoria. |
 | `PORT` | ❌ | Puerto donde escucha el servidor. Railway lo inyecta automáticamente. |
 | `FRONTEND_URL` | ❌ | URL(s) del frontend para CORS (comma-separated). Default: `http://localhost:5173` |
-| `GMAIL_USER` | ✅ | Correo Gmail desde el que se envían los emails de recuperación de contraseña. |
+| `GMAIL_USER` | ✅ | Correo Gmail desde el que se envían todos los emails de la plataforma (verificación de registro y recuperación de contraseña). |
 | `GMAIL_CLIENT_ID` | ✅ | ID de cliente OAuth2 de Google Cloud Console (tipo "Aplicación web"). |
 | `GMAIL_CLIENT_SECRET` | ✅ | Secreto del cliente OAuth2. |
 | `GMAIL_REFRESH_TOKEN` | ✅ | Refresh token obtenido via OAuth2 Playground con scope `https://mail.google.com/`. No expira a menos que se revoque manualmente. |
