@@ -6,8 +6,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 KNOWLEDGE_PATH = Path(__file__).parent / "knowledge.json"
-MIN_SCORE = 0.10
-TOP_K = 3
+MIN_SCORE = 0.12
+TOP_K = 4
 
 
 def normalize(text: str) -> str:

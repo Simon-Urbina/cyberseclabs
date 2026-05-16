@@ -9,19 +9,27 @@
   },
   {
     "q": "¿Cómo me registro o creo una cuenta?",
-    "a": "Haz clic en 'Empezar gratis' en la página principal, o ve a /register. Solo necesitas un nombre de usuario, correo y contraseña. El registro es gratuito."
+    "a": "El registro tiene dos pasos: primero ingresas tu nombre de usuario, correo y contraseña en /register. Luego recibirás un código de 6 dígitos a tu correo que debes ingresar en la plataforma dentro de 15 minutos para verificar tu cuenta. Una vez verificado puedes iniciar sesión."
+  },
+  {
+    "q": "¿Para qué sirve el código que llega al correo al registrarse?",
+    "a": "Al registrarte, CyberSec Labs envía un código de verificación de 6 dígitos a tu correo. Debes ingresarlo en la pantalla de verificación dentro de 15 minutos para activar tu cuenta. Si no llega o expira, puedes pedir que se reenvíe desde esa misma pantalla."
   },
   {
     "q": "¿Cómo me inscribo en un curso?",
-    "a": "Ve al Dashboard, busca el curso que te interesa y haz clic en 'Inscribirme'. Aparecerá un modal de confirmación. Al aceptar, tendrás acceso a todos los laboratorios del curso."
+    "a": "Ve al Dashboard, busca el curso que te interesa y haz clic en 'Inscribirme'. Aparecerá un modal de confirmación. Al aceptar, tendrás acceso inmediato a todos los módulos y laboratorios del curso."
   },
   {
     "q": "¿Cómo funciona el sistema de puntos?",
-    "a": "Cada laboratorio tiene una cantidad de puntos asignada. Para ganar esos puntos debes completar el lab: trabajar en las actividades de terminal y responder correctamente el quiz de 5 preguntas. Los puntos se suman automáticamente a tu perfil la primera vez que completas el lab."
+    "a": "Cada laboratorio tiene una cantidad de puntos asignada. Para ganar esos puntos debes completar el lab: trabajar en las actividades de terminal y aprobar el quiz de 5 preguntas. Los puntos se suman automáticamente a tu perfil la primera vez que completas el lab."
   },
   {
     "q": "¿Cuántas preguntas tiene el quiz de cada laboratorio?",
-    "a": "Cada laboratorio tiene exactamente 5 preguntas de quiz. Debes responder las 5 para enviar el intento."
+    "a": "Cada laboratorio tiene exactamente 5 preguntas de quiz. Debes responder las 5 para enviar el intento. Puedes reintentar el quiz cuantas veces quieras; los puntos solo se otorgan la primera vez que lo completas exitosamente."
+  },
+  {
+    "q": "¿Cuántas veces puedo intentar el quiz de un lab?",
+    "a": "Puedes intentar el quiz todas las veces que quieras. Solo cuenta la primera vez que lo completes exitosamente para ganar los puntos. Tu mejor porcentaje de acierto queda guardado en tu progreso."
   },
   {
     "q": "¿Qué tipos de preguntas hay en los laboratorios?",
@@ -29,7 +37,19 @@
   },
   {
     "q": "¿Cómo funciona la terminal en los labs?",
-    "a": "Cada lab tiene una terminal interactiva integrada donde ejecutas comandos reales. Las actividades te piden realizar acciones específicas y la plataforma valida tu respuesta comparándola con la salida esperada."
+    "a": "Cada lab tiene una terminal interactiva integrada donde ejecutas comandos reales. Las actividades te piden realizar acciones específicas y la plataforma valida tu respuesta comparándola con la salida esperada del sistema."
+  },
+  {
+    "q": "¿Cómo navego por un laboratorio?",
+    "a": "Dentro de un lab encontrarás: el contenido del laboratorio (explicación del tema en Markdown), las actividades prácticas de terminal y el quiz de 5 preguntas. Completa las actividades primero — las respuestas que obtienes en la terminal son las que necesitas para el quiz."
+  },
+  {
+    "q": "¿Puedo acceder a los labs sin inscribirme en el curso?",
+    "a": "No. Debes inscribirte en el curso para acceder a sus laboratorios. La inscripción es gratuita e instantánea desde la página del curso o desde el Dashboard."
+  },
+  {
+    "q": "¿El progreso en los labs se guarda automáticamente?",
+    "a": "Sí. Tu progreso en actividades y tu mejor puntaje en el quiz se guardan automáticamente. No necesitas hacer nada adicional para guardar tu avance."
   },
   {
     "q": "¿Cuáles son los niveles de dificultad?",
@@ -37,46 +57,98 @@
   },
   {
     "q": "¿Qué es el ranking?",
-    "a": "El ranking muestra a los usuarios ordenados por puntos totales acumulados. Se actualiza en tiempo real cada vez que alguien completa un lab. Puedes ver el top 5 en la página principal y el ranking completo en el Dashboard."
+    "a": "El ranking muestra a los usuarios ordenados por puntos totales acumulados. Se actualiza en tiempo real cuando alguien completa un lab. Puedes ver el top 5 en la página principal haciendo clic en cualquier usuario para ver su perfil público, y el ranking completo en el Dashboard."
   },
   {
     "q": "¿Cómo subo en el ranking?",
-    "a": "Completando laboratorios. Cada lab completado suma sus puntos a tu total. Mientras más labs completes y más difíciles sean, más puntos acumulas y más subes en el ranking."
+    "a": "Completando laboratorios. Cada lab completado suma sus puntos a tu total. Mientras más labs completes y más difíciles sean, más puntos acumulas. Los labs avanzados valen más puntos."
   },
   {
     "q": "¿Qué es el Dashboard?",
-    "a": "El Dashboard es tu página principal después de iniciar sesión. Muestra tu posición en el ranking, tus puntos totales, los cursos en los que estás inscrito y tu progreso en cada uno."
+    "a": "El Dashboard es tu página principal después de iniciar sesión. Muestra tu posición en el ranking, tus puntos totales, los cursos en los que estás inscrito con su progreso y el ranking global. Desde ahí accedes a todos los cursos y labs."
   },
   {
     "q": "¿Cómo veo mi perfil o lo edito?",
-    "a": "Haz clic en tu avatar o nombre de usuario en la esquina superior derecha del header. Puedes editar tu nombre de usuario, correo y contraseña desde el modal de perfil."
+    "a": "Haz clic en tu avatar o nombre de usuario en el header (esquina superior derecha). Desde el modal de perfil puedes editar tu nombre de usuario, bio, foto de perfil y contraseña."
+  },
+  {
+    "q": "¿Cómo subo o cambio mi foto de perfil?",
+    "a": "Desde el modal de perfil (clic en tu avatar en el header), haz clic en el área de foto para seleccionar una imagen desde tu dispositivo. La foto se actualiza al guardar el perfil."
   },
   {
     "q": "¿Puedo ver el perfil de otros usuarios?",
-    "a": "Sí. Cada usuario tiene un perfil público en /u/nombre-de-usuario donde se muestran sus puntos, laboratorios completados y posición en el ranking."
+    "a": "Sí. Cada usuario tiene un perfil público en /u/nombre-de-usuario con sus puntos, laboratorios completados, bio y posición en el ranking. También puedes llegar haciendo clic en cualquier nombre del ranking."
   },
   {
     "q": "¿Cómo está organizado el contenido?",
-    "a": "El contenido se organiza en: Cursos → Módulos → Laboratorios. Cada curso agrupa módulos temáticos, y cada módulo contiene varios laboratorios prácticos."
+    "a": "El contenido se organiza así: Cursos → Módulos → Laboratorios. Cada curso agrupa módulos temáticos, y cada módulo contiene varios laboratorios prácticos con actividades de terminal y quiz."
   },
   {
     "q": "¿Qué pasa si fallo el quiz de un lab?",
-    "a": "Puedes reintentar el quiz. Los puntos solo se otorgan la primera vez que completas exitosamente el laboratorio."
+    "a": "Puedes reintentar el quiz cuantas veces quieras. Los puntos solo se otorgan la primera vez que completas exitosamente el laboratorio. Tu mejor puntaje queda registrado en tu progreso."
   },
   {
     "q": "¿Cómo recupero mi contraseña?",
-    "a": "En la página de login haz clic en '¿Olvidaste tu contraseña?'. Ingresa tu correo y recibirás un enlace para restablecerla."
+    "a": "En la página de login haz clic en '¿Olvidaste tu contraseña?'. Ingresa tu correo y recibirás un enlace para restablecerla. El enlace expira en 1 hora."
+  },
+  {
+    "q": "¿Cómo cierro sesión?",
+    "a": "Haz clic en tu avatar o nombre en el header y busca la opción 'Cerrar sesión' en el menú desplegable del perfil."
+  },
+  {
+    "q": "¿Cuánto tiempo dura mi sesión?",
+    "a": "Tu sesión en CyberSec Labs dura 7 días. Después de ese tiempo deberás iniciar sesión nuevamente. Si cierras el navegador, la sesión se mantiene hasta que expire o cierres sesión manualmente."
   },
   {
     "q": "¿Quién creó CyberSec Labs?",
-    "a": "CyberSec Labs fue creada por Simón Urbina, estudiante de Ingeniería de Sistemas de la Universidad Santo Tomás seccional Tunja, como proyecto del semillero de investigación en ciberseguridad."
+    "a": "CyberSec Labs fue creada por Simón Urbina, estudiante de Ingeniería de Sistemas de la Universidad Santo Tomás seccional Tunja, como proyecto del semillero de investigación en ciberseguridad. Más info en /about."
   },
   {
     "q": "¿La plataforma es gratuita?",
-    "a": "Sí, CyberSec Labs es completamente gratuita. Solo necesitas crear una cuenta para acceder a todos los cursos y laboratorios."
+    "a": "Sí, CyberSec Labs es completamente gratuita. Solo necesitas crear una cuenta para acceder a todos los cursos y laboratorios disponibles."
   },
   {
     "q": "¿Qué es ciberseguridad según CyberSec Labs?",
     "a": "En CyberSec Labs entendemos la ciberseguridad como la práctica de proteger sistemas, redes y datos aprendiendo a atacarlos en entornos controlados. El enfoque es ofensivo-defensivo: para defender bien, primero hay que saber cómo se rompe."
+  },
+  {
+    "q": "¿Qué es Uchi y para qué sirve?",
+    "a": "Uchi soy yo: el asistente de inteligencia artificial de CyberSec Labs. Puedo ayudarte con dudas sobre los labs (sin darte la solución directa), explicar conceptos de ciberseguridad y orientarte dentro de la plataforma. Estoy disponible en el botón de la esquina inferior izquierda."
+  },
+  {
+    "q": "¿Qué puedo preguntarle a Uchi?",
+    "a": "Puedes preguntarme sobre cómo funciona la plataforma, qué significa un concepto de ciberseguridad, qué comando usar en un lab (te daré una pista sin darte la respuesta completa), dónde encontrar algo en CyberSec Labs, o cualquier duda general sobre los labs."
+  },
+  {
+    "q": "¿Dónde está desplegada la plataforma?",
+    "a": "CyberSec Labs está disponible en cyberseclabs.vercel.app. El frontend está en Vercel, el backend en Railway y la base de datos en Supabase. El código fuente está en GitHub: github.com/Simon-Urbina/cyberseclabs."
+  },
+  {
+    "q": "¿Cómo contacto al creador o reporto un error?",
+    "a": "Puedes contactar a Simón Urbina por correo (jacobitourbinalol@gmail.com), reportar bugs en GitHub Issues (github.com/Simon-Urbina/cyberseclabs/issues) o por LinkedIn. Más información en la página /about."
+  },
+  {
+    "q": "¿Dónde está la política de privacidad?",
+    "a": "La política de privacidad está en /privacy-policy o desde el enlace en el footer de la página. Cubre el tratamiento de datos según la Ley 1581 de 2012 de Colombia."
+  },
+  {
+    "q": "¿Qué datos recopila CyberSec Labs sobre mí?",
+    "a": "CyberSec Labs recopila: nombre de usuario, correo electrónico, contraseña (almacenada como hash seguro, nunca en texto plano), foto de perfil, bio y tu progreso en laboratorios. Consulta la política de privacidad en /privacy-policy para más detalles."
+  },
+  {
+    "q": "¿Qué tecnologías usa CyberSec Labs?",
+    "a": "CyberSec Labs usa: React 19 con TypeScript en el frontend (Vercel), Hono + Bun en el backend (Railway), PostgreSQL en Supabase como base de datos, y un chatbot con FastAPI + Python + Groq usando el modelo llama-3.3-70b-versatile."
+  },
+  {
+    "q": "¿Puedo ver los cursos sin iniciar sesión?",
+    "a": "Puedes ver el catálogo de cursos disponibles sin iniciar sesión, pero necesitas una cuenta para inscribirte en un curso y acceder a los laboratorios."
+  },
+  {
+    "q": "¿Cómo sé cuántos puntos vale un laboratorio?",
+    "a": "Los puntos de cada laboratorio se muestran en la página del lab, antes de iniciarlo. Generalmente, los labs de mayor dificultad tienen más puntos."
+  },
+  {
+    "q": "¿Qué información muestra el perfil público de un usuario?",
+    "a": "El perfil público (/u/nombre-de-usuario) muestra: nombre de usuario, foto de perfil, bio, puntos totales, posición en el ranking y laboratorios completados."
   }
 ]

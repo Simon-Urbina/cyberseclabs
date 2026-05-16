@@ -46,7 +46,7 @@ const STACK = [
   { name: 'Bun', category: 'Backend' },
   { name: 'PostgreSQL', category: 'Backend' },
   { name: 'Supabase', category: 'Backend' },
-  { name: 'Nodemailer', category: 'Backend' },
+  { name: 'Gmail API', category: 'Backend' },
   { name: 'Railway', category: 'Infra' },
   { name: 'Vercel', category: 'Infra' },
   { name: 'FastAPI', category: 'IA' },
@@ -435,6 +435,160 @@ export default function AboutPage() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CONTACTO ─── */}
+      <section
+        className="border-t"
+        style={{ borderColor: isDark ? 'rgba(26,63,150,0.12)' : 'rgba(26,63,150,0.10)' }}
+      >
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-20 lg:py-28">
+          <div className="max-w-2xl mb-14">
+            <p className="font-mono text-xs tracking-[0.22em] uppercase mb-4" style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}>
+              // contacto
+            </p>
+            <h2 className="font-display mb-4" style={{ fontSize: 'clamp(1.9rem, 3.5vw, 2.6rem)', lineHeight: 1.15, color: isDark ? '#C8D5EE' : '#0A1545' }}>
+              ¿Tienes alguna{' '}
+              <span style={{ color: '#2596be' }}>pregunta</span>?
+            </h2>
+            <p className="text-[15px] font-light" style={{ color: isDark ? '#4A70CC' : '#2451C8', lineHeight: 1.7 }}>
+              Si quieres colaborar, reportar un problema, proponer contenido o simplemente saludar, aquí están los canales directos.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* Email */}
+            <a
+              href="mailto:jacobitourbinalol@gmail.com"
+              className="rounded-2xl p-7 transition-all duration-200 flex flex-col gap-4"
+              style={{
+                background: isDark ? 'rgba(13,27,70,0.85)' : '#f8faff',
+                border: `1px solid ${isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.10)'}`,
+                textDecoration: 'none',
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement
+                el.style.transform = 'translateY(-3px)'
+                el.style.boxShadow = isDark
+                  ? '0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(37,150,190,0.30)'
+                  : '0 8px 32px rgba(10,21,69,0.08), 0 0 0 1px rgba(37,150,190,0.30)'
+                el.style.borderColor = 'rgba(37,150,190,0.40)'
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement
+                el.style.transform = 'translateY(0)'
+                el.style.boxShadow = 'none'
+                el.style.borderColor = isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.10)'
+              }}
+            >
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{ background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.03)', border: '1px solid rgba(37,150,190,0.30)', color: '#2596be' }}
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] tracking-[0.18em] uppercase mb-1.5" style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}>
+                  // correo directo
+                </p>
+                <p className="font-mono text-[13px]" style={{ color: isDark ? '#C8D5EE' : '#0A1545' }}>
+                  jacobitourbinalol@gmail.com
+                </p>
+              </div>
+            </a>
+
+            {/* GitHub Issues */}
+            <a
+              href="https://github.com/Simon-Urbina/cyberseclabs/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-2xl p-7 transition-all duration-200 flex flex-col gap-4"
+              style={{
+                background: isDark ? 'rgba(13,27,70,0.85)' : '#f8faff',
+                border: `1px solid ${isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.10)'}`,
+                textDecoration: 'none',
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement
+                el.style.transform = 'translateY(-3px)'
+                el.style.boxShadow = isDark
+                  ? '0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(200,213,238,0.20)'
+                  : '0 8px 32px rgba(10,21,69,0.08), 0 0 0 1px rgba(10,21,69,0.20)'
+                el.style.borderColor = isDark ? 'rgba(200,213,238,0.25)' : 'rgba(10,21,69,0.20)'
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement
+                el.style.transform = 'translateY(0)'
+                el.style.boxShadow = 'none'
+                el.style.borderColor = isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.10)'
+              }}
+            >
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{ background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.03)', border: '1px solid rgba(200,213,238,0.20)', color: isDark ? '#C8D5EE' : '#0A1545' }}
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.04c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.21.09 1.85 1.24 1.85 1.24 1.07 1.84 2.81 1.31 3.5 1 .11-.78.42-1.31.76-1.61-2.66-.3-5.46-1.33-5.46-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12 12 0 0 0 12 .5"/>
+                </svg>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] tracking-[0.18em] uppercase mb-1.5" style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}>
+                  // reportar un bug
+                </p>
+                <p className="font-mono text-[13px]" style={{ color: isDark ? '#C8D5EE' : '#0A1545' }}>
+                  github.com/Simon-Urbina/cyberseclabs
+                </p>
+              </div>
+            </a>
+
+            {/* LinkedIn */}
+            <a
+              href="https://www.linkedin.com/in/simon-urbina-martinez/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-2xl p-7 transition-all duration-200 flex flex-col gap-4"
+              style={{
+                background: isDark ? 'rgba(13,27,70,0.85)' : '#f8faff',
+                border: `1px solid ${isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.10)'}`,
+                textDecoration: 'none',
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement
+                el.style.transform = 'translateY(-3px)'
+                el.style.boxShadow = isDark
+                  ? '0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(96,165,250,0.25)'
+                  : '0 8px 32px rgba(10,21,69,0.08), 0 0 0 1px rgba(96,165,250,0.25)'
+                el.style.borderColor = 'rgba(96,165,250,0.35)'
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement
+                el.style.transform = 'translateY(0)'
+                el.style.boxShadow = 'none'
+                el.style.borderColor = isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.10)'
+              }}
+            >
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{ background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.03)', border: '1px solid rgba(96,165,250,0.25)', color: '#60a5fa' }}
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.95v5.66H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.59 0 4.26 2.36 4.26 5.43v6.31ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.56V9h3.56v11.45ZM22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.21 0 22.23 0Z"/>
+                </svg>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] tracking-[0.18em] uppercase mb-1.5" style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}>
+                  // linkedin
+                </p>
+                <p className="font-mono text-[13px]" style={{ color: isDark ? '#C8D5EE' : '#0A1545' }}>
+                  simon-urbina-martinez
+                </p>
+              </div>
+            </a>
           </div>
         </div>
       </section>

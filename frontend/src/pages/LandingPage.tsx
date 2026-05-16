@@ -276,6 +276,114 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ─── CÓMO FUNCIONA ─── */}
+      <section
+        className="border-t relative overflow-hidden"
+        style={{
+          borderColor: isDark ? 'rgba(26,63,150,0.12)' : 'rgba(26,63,150,0.10)',
+          background: isDark
+            ? 'linear-gradient(180deg, #060D1F 0%, #091520 100%)'
+            : 'linear-gradient(180deg, #EEF3FC 0%, #E8EEFA 100%)',
+        }}
+      >
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-10 py-20 lg:py-28">
+          <div className="max-w-2xl mb-16">
+            <p
+              className="font-mono text-xs tracking-[0.22em] uppercase mb-4"
+              style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
+            >
+              // cómo funciona
+            </p>
+            <h2
+              className="font-display"
+              style={{
+                fontSize: 'clamp(1.9rem, 3.5vw, 2.75rem)',
+                lineHeight: 1.15,
+                color: isDark ? '#C8D5EE' : '#0A1545',
+              }}
+            >
+              De cero a hacker en{' '}
+              <span style={{ color: '#2596be' }}>cuatro pasos</span>.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              {
+                step: '01',
+                title: 'Crea tu cuenta',
+                body: 'Regístrate gratis en menos de 2 minutos. Solo necesitas un correo y un nombre de usuario.',
+                accent: '#1A3F96',
+              },
+              {
+                step: '02',
+                title: 'Elige un curso',
+                body: 'Explora los cursos disponibles e inscríbete en el path que más te interese — desde principiante hasta avanzado.',
+                accent: '#2596be',
+              },
+              {
+                step: '03',
+                title: 'Trabaja los labs',
+                body: 'Lee el contenido del laboratorio, completa las actividades interactivas y responde el quiz al final.',
+                accent: '#1A3F96',
+              },
+              {
+                step: '04',
+                title: 'Sube en el ranking',
+                body: 'Cada lab completado suma puntos. Escala posiciones y demuestra tu nivel en el ranking global.',
+                accent: '#F5C500',
+              },
+            ].map(({ step, title, body, accent }) => (
+              <div
+                key={step}
+                className="rounded-2xl p-8 relative overflow-hidden transition-all duration-200 cursor-default"
+                style={{
+                  background: isDark ? 'rgba(13,27,70,0.85)' : '#f8faff',
+                  border: `1px solid ${isDark ? 'rgba(26,63,150,0.14)' : 'rgba(26,63,150,0.10)'}`,
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLElement
+                  el.style.transform = 'translateY(-3px)'
+                  el.style.boxShadow = isDark
+                    ? `0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px ${accent}30`
+                    : `0 8px 32px rgba(10,21,69,0.08), 0 0 0 1px ${accent}30`
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLElement
+                  el.style.transform = 'translateY(0)'
+                  el.style.boxShadow = 'none'
+                }}
+              >
+                <p
+                  className="num-display absolute top-4 right-6 pointer-events-none select-none"
+                  style={{ fontSize: '5rem', lineHeight: 1, color: accent, opacity: 0.07 }}
+                >
+                  {step}
+                </p>
+                <p
+                  className="font-mono text-[11px] tracking-[0.22em] uppercase mb-5"
+                  style={{ color: accent }}
+                >
+                  // paso {step}
+                </p>
+                <h3
+                  className="font-display mb-3"
+                  style={{ fontSize: '1.35rem', color: isDark ? '#EEF3FC' : '#0A1545' }}
+                >
+                  {title}
+                </h3>
+                <p
+                  className="text-[14px] font-light"
+                  style={{ color: isDark ? '#4A70CC' : '#2451C8', lineHeight: 1.65 }}
+                >
+                  {body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── RANKING ─── */}
       <section
         className="border-t relative overflow-hidden"
@@ -321,7 +429,7 @@ export default function LandingPage() {
               className="text-[15px] max-w-xl"
               style={{ color: isDark ? '#4A70CC' : '#1A3F96', lineHeight: 1.65 }}
             >
-              Ranking en tiempo real. Cada lab completado te acerca un paso más a la cima.
+              Ranking en tiempo real. Haz clic en cualquier operador para ver su perfil público.
             </p>
           </div>
 

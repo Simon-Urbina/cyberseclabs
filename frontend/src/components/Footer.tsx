@@ -19,6 +19,12 @@ const FOOTER_COLUMNS = [
     ],
   },
   {
+    label: 'Legal',
+    links: [
+      { label: 'Política de privacidad', to: '/privacy-policy' },
+    ],
+  },
+  {
     label: 'USTA Tunja',
     links: [
       { label: 'Universidad', to: 'https://santototunja.edu.co/', external: true },
@@ -154,7 +160,7 @@ export default function Footer() {
           </div>
 
           {/* Link columns */}
-          <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8">
+          <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-8">
             {FOOTER_COLUMNS.map(({ label, links }) => (
               <div key={label}>
                 <p

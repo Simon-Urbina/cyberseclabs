@@ -99,6 +99,15 @@ export default function Ranking({ limit = 5, selfProfile }: { limit?: number; se
         </div>
       )}
 
+      {!loading && !error && rows.length > 0 && (
+        <p
+          className="font-mono text-[10px] tracking-[0.18em] uppercase px-1 pb-1"
+          style={{ color: isDark ? '#3A5AB8' : '#4A70CC' }}
+        >
+          // clic en cualquier hacker para ver su perfil
+        </p>
+      )}
+
       {!loading && !error && rows.map(row => {
         const accent = RANK_ACCENTS[row.rank]?.color ?? (isDark ? '#3A5AB8' : '#4A70CC')
         const label = RANK_ACCENTS[row.rank]?.label

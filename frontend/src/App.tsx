@@ -14,6 +14,7 @@ import CoursePage from './pages/CoursePage'
 import LabPage from './pages/LabPage'
 import PublicProfilePage from './pages/PublicProfilePage'
 import AboutPage from './pages/AboutPage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ChatWidget from './components/ChatWidget'
 
@@ -79,6 +80,9 @@ function AppShell() {
 
         {/* About page */}
         <Route path="/about" element={<AboutPage />} />
+
+        {/* Privacy policy */}
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />
