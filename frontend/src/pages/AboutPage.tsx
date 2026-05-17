@@ -263,7 +263,7 @@ export default function AboutPage() {
                   <span className="w-3 h-3 rounded-full" style={{ background: '#2b2b2b' }} />
                   <span className="w-3 h-3 rounded-full" style={{ background: '#2b2b2b' }} />
                   <span className="flex-1 text-center font-mono text-[10px] tracking-[0.15em]" style={{ color: '#3A5AB8' }}>
-                    simon@cyberseclabs — whoami
+                    simon@rutseg — whoami
                   </span>
                 </div>
                 {/* Content */}
@@ -277,7 +277,7 @@ export default function AboutPage() {
                     { key: 'universidad', value: 'USTA — Tunja, Colombia' },
                     { key: 'carrera', value: 'Ing. de Sistemas' },
                     { key: 'intereses', value: 'IA · Ciberseguridad · Desarrollo' },
-                    { key: 'proyecto', value: 'CyberSec Labs (UCHIE)' },
+                    { key: 'proyecto', value: 'RutSeg (UCHIE)' },
                   ].map(({ key, value }) => (
                     <p key={key}>
                       <span style={{ color: '#2596be' }}>{key}</span>
@@ -373,14 +373,14 @@ export default function AboutPage() {
               </p>
               <h2 className="font-display mb-6" style={{ fontSize: 'clamp(1.9rem, 3.5vw, 2.6rem)', lineHeight: 1.15, color: isDark ? '#C8D5EE' : '#0A1545' }}>
                 Por qué existe <br></br>
-                <span style={{ color: '#2596be' }}>CyberSec Labs</span>.
+                <span style={{ color: '#2596be' }}>RutSeg</span>.
               </h2>
               <div className="space-y-4 text-[15px] font-light" style={{ color: isDark ? '#4A70CC' : '#2451C8', lineHeight: 1.8 }}>
                 <p>
                   Aprender ciberseguridad en Colombia es difícil. La mayoría de recursos son en inglés, costosos o puramente teóricos. Los estudiantes terminan viendo diapositivas sobre conceptos que nunca ponen en práctica.
                 </p>
                 <p>
-                  CyberSec Labs nació como proyecto del semillero de investigación en USTA Tunja para cambiar eso: una plataforma en español, gratuita, basada en <strong style={{ color: isDark ? '#C8D5EE' : '#0A1545', fontWeight: 600 }}>laboratorios prácticos reales</strong> donde aprendes haciendo, no leyendo.
+                  RutSeg nació como proyecto del semillero de investigación en USTA Tunja para cambiar eso: una plataforma en español, gratuita, basada en <strong style={{ color: isDark ? '#C8D5EE' : '#0A1545', fontWeight: 600 }}>laboratorios prácticos reales</strong> donde aprendes haciendo, no leyendo.
                 </p>
                 <p>
                   Cada lab está diseñado para enseñar algo concreto que puedas aplicar. Sin relleno, sin teoría plana. Solo terminales, problemas, y el progreso que acumulas al resolverlos.

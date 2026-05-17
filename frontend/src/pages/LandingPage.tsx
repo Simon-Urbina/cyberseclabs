@@ -125,7 +125,7 @@ export default function LandingPage() {
                 color: isDark ? '#C8D5EE' : '#0A1545',
               }}
             >
-              Aprende ciberseguridad{' '}
+              Tu ruta segura{' '}
               <span
                 key={isDark ? 'dark' : 'light'}
                 style={{
@@ -138,7 +138,7 @@ export default function LandingPage() {
                   backgroundClip: 'text',
                 }}
               >
-                rompiendo cosas
+                hacia el hacking real
               </span>
               .
             </h1>
@@ -146,8 +146,8 @@ export default function LandingPage() {
               className="text-lg lg:text-xl font-light max-w-2xl mb-12 animate-fade-up-3"
               style={{ color: isDark ? '#7B9FE8' : '#2451C8', lineHeight: 1.6 }}
             >
-              CyberSec Labs es la plataforma de laboratorios prácticos
-              donde futuros hackers convierten teoría en skills reales. Sin diapositivas, sin atajos.
+              RutSeg es tu plataforma de laboratorios prácticos en ciberseguridad.
+              Aprende con ejercicios reales, a tu ritmo, sin diapositivas y sin atajos.
             </p>
 
             <div className="flex flex-wrap items-center gap-4 animate-fade-up-4">
@@ -210,7 +210,7 @@ export default function LandingPage() {
               className="font-mono text-xs tracking-[0.22em] uppercase mb-4"
               style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
             >
-              // ¿qué hace CyberSec Labs diferente?
+              // ¿qué hace RutSeg diferente?
             </p>
             <h2
               className="font-display"
@@ -220,9 +220,9 @@ export default function LandingPage() {
                 color: isDark ? '#C8D5EE' : '#0A1545',
               }}
             >
-              Una plataforma diseñada para gente que prefiere{' '}
-              <span style={{ color: '#1A3F96' }}>romper cosas</span>{' '}
-              que leerlas.
+              Una plataforma pensada para aprender{' '}
+              <span style={{ color: '#1A3F96' }}>haciendo</span>
+              , no solo leyendo.
             </h2>
           </div>
 

@@ -102,13 +102,13 @@ export default function Footer() {
                   className="font-display text-[18px] leading-none"
                   style={{ color: isDark ? '#C8D5EE' : '#0A1545' }}
                 >
-                  CyberSec<span style={{ color: '#1A3F96' }}> Labs</span>
+                  RutSeg
                 </p>
                 <p
                   className="font-mono text-[9px] tracking-[0.22em] uppercase mt-1"
                   style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
                 >
-                  learn · hack · evolve
+                  ruta · segura · real
                 </p>
               </div>
             </Link>
@@ -210,7 +210,7 @@ export default function Footer() {
             className="font-mono text-[10px] tracking-[0.22em] uppercase"
             style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
           >
-            CyberSec Labs © 2026 — Simón Jacobo Urbina Martínez
+            RutSeg © 2026 — Simón Jacobo Urbina Martínez
           </p>
           <span
             className="font-mono text-[10px] tracking-[0.22em] uppercase px-2.5 py-1 rounded"

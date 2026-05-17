@@ -162,7 +162,7 @@ function TerminalPanel({
 }) {
   const [history, setHistory] = useState<HLine[]>(() => {
     const init: HLine[] = [
-      { type: 'heading', text: 'CyberSec Labs — Terminal Simulado' },
+      { type: 'heading', text: 'RutSeg — Terminal Simulado' },
       { type: 'blank', text: '' },
       ...mdToTerminalLines(activity.instructionsMarkdown),
       { type: 'blank', text: '' },
@@ -194,7 +194,7 @@ function TerminalPanel({
     const cmd = input.trim()
     if (!cmd || busy) return
     setInput('')
-    setHistory(h => [...h, { type: 'input', text: `root@cyberseclab:~# ${cmd}` }])
+    setHistory(h => [...h, { type: 'input', text: `root@rutseg:~# ${cmd}` }])
     setBusy(true)
     try {
       const res = await api.post<{ isCorrect: boolean; feedback: string; generatedResponse: string | null }>(
@@ -303,7 +303,7 @@ function TerminalPanel({
             <span className="w-3 h-3 rounded-full" style={{ background: '#2b2b2b' }} />
             <span className="w-3 h-3 rounded-full" style={{ background: '#2b2b2b' }} />
             <span className="flex-1 text-center font-mono text-[10px] tracking-[0.12em]" style={{ color: '#3A5AB8' }}>
-              Terminal — root@cyberseclab:~
+              Terminal — root@rutseg:~
             </span>
           </div>
 
@@ -328,7 +328,7 @@ function TerminalPanel({
               style={{ borderTop: '1px solid rgba(0,200,100,0.06)' }}
             >
               <span className="font-mono text-[13px] shrink-0" style={{ color: '#4ade80' }}>
-                root@cyberseclab:~#
+                root@rutseg:~#
               </span>
               <input
                 ref={inputRef}
@@ -920,6 +920,10 @@ export default function LabPage() {
 
   const handleNext = () => {
     if (!nextLab) return
+    setResult(null)
+    setQuestionStates({})
+    setOpenQuestions(new Set([0]))
+    setSubmitError(null)
     navigate(`/courses/${slug}/${nextLab.moduleSlug}/${nextLab.slug}`)
   }
 

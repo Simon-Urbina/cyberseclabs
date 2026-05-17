@@ -28,13 +28,13 @@ export function LogoWordmark({ isDark = true }: { isDark?: boolean }) {
           className="font-display text-[17px] tracking-tight leading-none"
           style={{ color: isDark ? '#EEF3FC' : '#0A1545' }}
         >
-          CyberSec<span style={{ color: '#1A3F96' }}> Labs</span>
+          RutSeg
         </span>
         <span
           className="font-mono text-[9px] tracking-[0.2em] uppercase leading-none"
           style={{ color: isDark ? '#3A5AB8' : '#1535A0' }}
         >
-          learn · hack · evolve
+          ruta · segura · real
         </span>
       </div>
     </div>

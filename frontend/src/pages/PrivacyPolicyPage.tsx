@@ -12,7 +12,7 @@ const SECTIONS = [
       <>
         <p>
           El responsable del tratamiento de los datos personales recopilados a través de la plataforma
-          <strong> CyberSec Labs</strong> es:
+          <strong> RutSeg</strong> es:
         </p>
         <div className="mt-4 space-y-1">
           {[
@@ -38,7 +38,7 @@ const SECTIONS = [
     title: 'Datos Personales que Recopilamos',
     content: (
       <>
-        <p>Al registrarte y usar CyberSec Labs, recopilamos la siguiente información:</p>
+        <p>Al registrarte y usar RutSeg, recopilamos la siguiente información:</p>
         <div className="mt-5 space-y-3">
           {[
             {
@@ -191,7 +191,7 @@ const SECTIONS = [
         <div className="rounded-xl px-5 py-4 mb-4" style={{ background: 'rgba(245,197,0,0.06)', border: '1px solid rgba(245,197,0,0.20)' }}>
           <p className="font-mono text-[11px] tracking-[0.14em] uppercase mb-1" style={{ color: '#F5C500' }}>// estado actual</p>
           <p className="text-[14px]">
-            En este momento, CyberSec Labs <strong>no muestra publicidad</strong>. Este apartado describe el comportamiento previsto si la plataforma integra Google AdSense en el futuro.
+            En este momento, RutSeg <strong>no muestra publicidad</strong>. Este apartado describe el comportamiento previsto si la plataforma integra Google AdSense en el futuro.
           </p>
         </div>
         <p>
@@ -283,7 +283,7 @@ const SECTIONS = [
     content: (
       <>
         <p>
-          CyberSec Labs está diseñada principalmente para estudiantes universitarios y personas mayores de
+          RutSeg está diseñada principalmente para estudiantes universitarios y personas mayores de
           <strong> 18 años</strong>. Conforme al artículo 7 de la Ley 1581 de 2012, no recopilamos
           intencionalmente datos de menores de 18 años sin el consentimiento verificado de su representante legal.
         </p>
@@ -397,7 +397,7 @@ export default function PrivacyPolicyPage() {
             Política de <span style={{ color: '#1A3F96' }}>Privacidad</span>
           </h1>
           <p className="text-[16px] font-light max-w-xl mb-8 animate-fade-up-3" style={{ color: textSecondary, lineHeight: 1.65 }}>
-            CyberSec Labs se compromete a proteger tus datos personales de acuerdo con la legislación colombiana
+            RutSeg se compromete a proteger tus datos personales de acuerdo con la legislación colombiana
             e internacional vigente.
           </p>
           <div className="flex flex-wrap gap-6 animate-fade-up-4">

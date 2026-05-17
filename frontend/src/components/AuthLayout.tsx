@@ -99,7 +99,7 @@ export default function AuthLayout({
               className="font-mono text-[11px] tracking-[0.24em] uppercase"
               style={{ color: '#3A5AB8' }}
             >
-              CyberSec Labs
+              RutSeg
             </span>
           </Link>
 
@@ -203,7 +203,7 @@ export default function AuthLayout({
               className="font-display text-[17px]"
               style={{ color: isDark ? '#EEF3FC' : '#0A1545' }}
             >
-              CyberSec<span style={{ color: '#1A3F96' }}> Labs</span>
+              RutSeg
             </span>
           </Link>
           <div className="hidden lg:block" />
@@ -232,7 +232,7 @@ export default function AuthLayout({
             className="font-mono text-[10px] tracking-[0.2em] uppercase"
             style={{ color: isDark ? 'rgba(26,63,150,0.4)' : 'rgba(26,63,150,0.3)' }}
           >
-            CyberSec Labs © 2026
+            RutSeg © 2026
           </p>
         </div>
       </div>

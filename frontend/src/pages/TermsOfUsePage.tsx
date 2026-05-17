@@ -11,12 +11,12 @@ const SECTIONS = [
       <>
         <p>
           Los presentes Términos de Uso regulan el acceso y la utilización de la plataforma{' '}
-          <strong>CyberSec Labs</strong>, desarrollada como proyecto académico en el marco del
+          <strong>RutSeg</strong>, desarrollada como proyecto académico en el marco del
           Semillero de Investigación en Ciberseguridad y Desarrollo de Software de la{' '}
           <strong>Universidad Santo Tomás — Tunja, Colombia</strong>.
         </p>
         <p className="mt-4">
-          Al registrarte o usar CyberSec Labs, aceptas estos términos en su totalidad. Si no estás
+          Al registrarte o usar RutSeg, aceptas estos términos en su totalidad. Si no estás
           de acuerdo con alguno de ellos, debes abstenerte de usar la plataforma.
         </p>
       </>
@@ -28,7 +28,7 @@ const SECTIONS = [
     title: 'Uso Permitido',
     content: (
       <>
-        <p>CyberSec Labs es una plataforma educativa. Puedes:</p>
+        <p>RutSeg es una plataforma educativa. Puedes:</p>
         <ul className="mt-4 space-y-2 list-none">
           {[
             'Completar laboratorios, quizzes y actividades con fines de aprendizaje.',
@@ -81,7 +81,7 @@ const SECTIONS = [
     content: (
       <>
         <p>
-          Todo el contenido de CyberSec Labs — incluyendo textos, laboratorios, código fuente,
+          Todo el contenido de RutSeg — incluyendo textos, laboratorios, código fuente,
           diseño visual y materiales didácticos — es propiedad de sus autores y está protegido por
           las leyes de derechos de autor aplicables en Colombia.
         </p>
@@ -104,7 +104,7 @@ const SECTIONS = [
     content: (
       <>
         <p>
-          CyberSec Labs es un proyecto académico proporcionado <strong>"tal como está"</strong>,
+          RutSeg es un proyecto académico proporcionado <strong>"tal como está"</strong>,
           sin garantías de disponibilidad continua, exactitud o idoneidad para un propósito
           particular.
         </p>
@@ -127,7 +127,7 @@ const SECTIONS = [
     title: 'Cuentas de Usuario',
     content: (
       <>
-        <p>Al crear una cuenta en CyberSec Labs, te comprometes a:</p>
+        <p>Al crear una cuenta en RutSeg, te comprometes a:</p>
         <ul className="mt-4 space-y-2 list-none">
           {[
             'Proporcionar información veraz y mantenerla actualizada.',
@@ -155,7 +155,7 @@ const SECTIONS = [
     content: (
       <p>
         Estos Términos de Uso pueden actualizarse en cualquier momento. Los cambios significativos
-        serán notificados mediante un aviso en la plataforma. El uso continuado de CyberSec Labs
+        serán notificados mediante un aviso en la plataforma. El uso continuado de RutSeg
         tras la publicación de cambios constituye la aceptación de los nuevos términos.
       </p>
     ),
@@ -231,7 +231,7 @@ export default function TermsOfUsePage() {
             Términos de <span style={{ color: '#1A3F96' }}>Uso</span>
           </h1>
           <p style={{ color: isDark ? '#4A70CC' : '#2451C8', maxWidth: '520px', lineHeight: 1.65 }}>
-            Al usar CyberSec Labs aceptas estos términos. Léelos con atención antes de registrarte.
+            Al usar RutSeg aceptas estos términos. Léelos con atención antes de registrarte.
           </p>
           <p
             className="font-mono text-[11px] mt-6"
