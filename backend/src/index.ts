@@ -22,7 +22,7 @@ app.use(
   cors({
     origin: (origin) => {
       if (allowedOrigins.includes(origin)) return origin
-      if (/^https:\/\/cyberseclabs[^.]*\.vercel\.app$/.test(origin)) return origin
+      if (/^https:\/\/rutseg[^.]*\.vercel\.app$/.test(origin)) return origin
       return null
     },
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
