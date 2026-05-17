@@ -23,7 +23,7 @@ export function LogoWordmark({ isDark = true }: { isDark?: boolean }) {
   return (
     <div className="flex items-center gap-2.5">
       <LogoIcon />
-      <div className="flex flex-col leading-none gap-0.5">
+      <div className="flex flex-col leading-none gap-1.5">
         <span
           className="font-display text-[17px] tracking-tight leading-none"
           style={{ color: isDark ? '#EEF3FC' : '#0A1545' }}
@@ -34,7 +34,7 @@ export function LogoWordmark({ isDark = true }: { isDark?: boolean }) {
           className="font-mono text-[9px] tracking-[0.2em] uppercase leading-none"
           style={{ color: isDark ? '#3A5AB8' : '#1535A0' }}
         >
-          ruta · segura · real
+          ruta · segura
         </span>
       </div>
     </div>

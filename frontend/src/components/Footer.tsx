@@ -20,9 +20,9 @@ const FOOTER_COLUMNS = [
     ],
   },
   {
-    label: 'USTA Tunja',
+    label: 'Universidad',
     links: [
-      { label: 'Universidad', to: 'https://santototunja.edu.co/', external: true },
+      { label: 'Santoto Tunja', to: 'https://santototunja.edu.co/', external: true },
       { label: 'Ing. de Sistemas', to: 'https://santototunja.edu.co/pregrados/ingenieria-de-sistemas', external: true },
     ],
   },
@@ -108,7 +108,7 @@ export default function Footer() {
                   className="font-mono text-[9px] tracking-[0.22em] uppercase mt-1"
                   style={{ color: isDark ? '#3A5AB8' : '#1A3F96' }}
                 >
-                  ruta · segura · real
+                  ruta · segura
                 </p>
               </div>
             </Link>
